@@ -203,7 +203,7 @@ export const InvitationCodeForm = forwardRef<InvitationFormHandle, CodeProps>(
           <ExIcon size="6rem" className={styles.authIcon} />
           <h2>验证邮箱</h2>
           <p>{email}</p>
-          <p>请输入邀请邮件中的六位验证码</p>
+          <p>请输入注册邮件中的六位验证码</p>
         </div>
         <Field data-invalid={!!form.formState.errors.code}>
           <FieldContent>

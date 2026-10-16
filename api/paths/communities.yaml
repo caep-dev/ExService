@@ -1,0 +1,321 @@
+/communities:
+  get:
+    operationId: listCommunities
+    summary: listCommunities
+    tags:
+      - authentication
+    security: []
+    parameters: &a2
+      - &a4
+        name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+      - &a5
+        name: offset
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          default: 0
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: &a1
+          X-Request-Id:
+            $ref: ../openapi.yaml#/components/headers/RequestId
+          Cache-Control:
+            $ref: ../openapi.yaml#/components/headers/CacheControl
+          Referrer-Policy:
+            schema:
+              type: string
+              const: no-referrer
+          X-Content-Type-Options:
+            $ref: ../openapi.yaml#/components/headers/ContentTypeOptions
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/CommunityList
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/communities/{communityId}:
+  get:
+    operationId: getCommunity
+    summary: getCommunity
+    tags:
+      - authentication
+    security: []
+    parameters:
+      - &a3
+        name: communityId
+        in: path
+        required: true
+        schema:
+          $ref: ../openapi.yaml#/components/schemas/CommunityId
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/Community
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/auth/me/communities:
+  get:
+    operationId: listMyCommunityStatuses
+    summary: listMyCommunityStatuses
+    tags:
+      - authentication
+    security:
+      - bearerAuth: []
+    parameters: *a2
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/MyCommunityStatusList
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/auth/me/communities/{communityId}:
+  get:
+    operationId: getMyCommunityStatus
+    summary: getMyCommunityStatus
+    tags:
+      - authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - *a3
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/MyCommunityStatus
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/auth/me/review-access:
+  get:
+    operationId: getMyCommunityReviewAccess
+    summary: getMyCommunityReviewAccess
+    tags:
+      - authentication
+    security:
+      - bearerAuth: []
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/CommunityReviewAccess
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/admin/communities:
+  post:
+    operationId: createCommunity
+    summary: createCommunity
+    tags:
+      - authentication
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../openapi.yaml#/components/schemas/CreateCommunityRequest
+    responses:
+      "201":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/Community
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "409":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/admin/communities/{communityId}:
+  put:
+    operationId: updateCommunity
+    summary: updateCommunity
+    tags:
+      - authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - *a3
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../openapi.yaml#/components/schemas/UpdateCommunityRequest
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/Community
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "409":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/admin/communities/{communityId}/reviewers:
+  get:
+    operationId: listCommunityReviewers
+    summary: listCommunityReviewers
+    tags:
+      - authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - *a3
+      - *a4
+      - *a5
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/CommunityReviewerList
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/admin/communities/{communityId}/reviewers/{userId}:
+  put:
+    operationId: grantCommunityReviewer
+    summary: grantCommunityReviewer
+    tags:
+      - authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - *a3
+      - name: userId
+        in: path
+        required: true
+        schema: &a6
+          $ref: ../openapi.yaml#/components/schemas/Uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../openapi.yaml#/components/schemas/CfxEmptyRequest
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/CommunityReviewer
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "409":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+  delete:
+    operationId: revokeCommunityReviewer
+    summary: revokeCommunityReviewer
+    tags:
+      - authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - *a3
+      - name: userId
+        in: path
+        required: true
+        schema: *a6
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a1
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/RevokeCommunityReviewerResult
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse

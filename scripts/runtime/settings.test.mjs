@@ -121,6 +121,27 @@ test('ClickUp token overrides root config only in server and is redacted in reta
   }
 })
 
+test('Cfx configuration respects process precedence and is sent only to the Server snapshot', t => {
+  const f = fixture(t)
+  Object.assign(f.values, { CFX_ENABLED: 'false', CFX_APPLICATION_NAME: 'File application' }); f.save()
+  const state = f.read({ CFX_ENABLED: 'true', CFX_APPLICATION_NAME: 'Process application' })
+  assert.equal(state.environments.server.CFX_ENABLED, 'true')
+  assert.equal(state.environments.server.CFX_APPLICATION_NAME, 'Process application')
+  assert.equal(state.environments.server.NODE_ENV, 'development')
+  for (const name of ['web', 'hydra']) {
+    assert.equal(state.environments[name].CFX_ENABLED, undefined)
+    assert.equal(state.environments[name].CFX_APPLICATION_NAME, undefined)
+  }
+  assert.equal(fixture(t, 'deployment').read({ CFX_ENABLED: 'true' }).environments.server.NODE_ENV, 'production')
+})
+
+test('the opt-in registration mail simulator is Server-only and process settings take precedence',t=>{
+  const f=fixture(t);f.values.SERVER_REGISTRATION_MAIL_SIMULATOR='false';f.save()
+  const state=f.read({SERVER_REGISTRATION_MAIL_SIMULATOR:'true'})
+  assert.equal(state.environments.server.SERVER_REGISTRATION_MAIL_SIMULATOR,'true')
+  for (const [name, environment] of Object.entries(state.environments)) if (name !== 'server') assert.equal(environment.SERVER_REGISTRATION_MAIL_SIMULATOR, undefined)
+})
+
 test('Docker status failures explain engine availability without exposing command output', t => {
   const state = fixture(t).read(); state.workspace = root
   const cases = [
@@ -812,4 +833,12 @@ test('test watch accepts Contract source changes and ignores generated outputs i
   assert.equal(runtimeTests.isTestSourceChange('scripts', 'node_modules/tool/index.js'), false)
   assert.equal(runtimeTests.isTestSourceChange('scripts', 'run.log'), false)
   assert.equal(runtimeTests.isTestSourceChange('scripts', undefined), false)
+})
+
+test('registration inventory uses the readonly entry and production compiled configuration', t => {
+  const f = fixture(t)
+  const local = serverSpecification('db:registration-inventory', [], { workspace: f.workspace, inherited: {RUNTIME_ENV_INJECTED:'true',NODE_ENV:'development'} })
+  assert.deepEqual(local.args,['--import','tsx','src/db/public-registration-inventory-cli.ts'])
+  const production = serverSpecification('db:registration-inventory', [], { workspace: f.workspace, inherited: {RUNTIME_ENV_INJECTED:'true',NODE_ENV:'production'} })
+  assert.deepEqual(production.args,['dist/db/public-registration-inventory-cli.js'])
 })

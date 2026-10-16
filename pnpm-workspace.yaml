@@ -1,5 +1,6 @@
 packages:
   - apps/*
+  - '!apps/outline'
   - packages/*
 
 # Drizzle 的 SQLite 驱动是可选 peer；本仓库只解析 PostgreSQL 驱动。

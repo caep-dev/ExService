@@ -4,7 +4,9 @@ import { requireSession } from '@server/src/modules/auth/api/handlers.js'
 
 export async function updateCurrentUser(request: ApiRequest<'updateCurrentUser'>, reply: FastifyReply): Promise<ApiJsonResult<'updateCurrentUser'>> {
   void reply.header('Cache-Control', 'no-store')
-  return request.server.profileServices.update(requireSession(request).userId, request.body)
+  const session = requireSession(request)
+  return request.server.profileServices.update(session.userId, request.body,
+    tx => request.server.authServices.assertSessionCurrent(session, tx, true))
 }
 
 export async function uploadCurrentUserAvatar(request: ApiRequest<'uploadCurrentUserAvatar'>, reply: FastifyReply): Promise<ApiJsonResult<'uploadCurrentUserAvatar'>> {

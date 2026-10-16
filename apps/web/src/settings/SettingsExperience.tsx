@@ -6,6 +6,7 @@ import { readToken, subscribeSessionChanges } from '@web/src/auth/storage'
 import { useNotificationPreferencesController } from '@web/src/notifications/useNotificationPreferencesController'
 import { useSettingsController } from '@web/src/settings/useSettingsController'
 import styles from '@web/src/settings/SettingsExperience.module.scss'
+import {IdentityLinksExperience} from './IdentityLinksExperience'
 
 type SettingsSource = 'profile' | 'notifications'
 
@@ -61,6 +62,7 @@ export function SettingsExperience({ initialCategory }: { initialCategory: Setti
     profileError={authUnavailableWithoutProfile ? settings.authMessage ?? '登录状态不可用' : settings.snapshot.profile.error}
     onRetry={authUnavailableWithoutProfile ? settings.retryAuth : () => void settings.load()}
     notifications={preferences.slice}
+    identityLinks={category==='identity-links'?<IdentityLinksExperience key={sessionToken} token={sessionToken}/>:null}
     onSave={settings.save} onUpload={settings.upload}
     onRemoveAvatar={settings.removeAvatar} onLogout={settings.logout}
     logoutPending={settings.logoutPending} actionPending={settings.actionPending}

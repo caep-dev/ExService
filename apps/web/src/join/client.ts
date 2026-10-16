@@ -9,8 +9,8 @@ export class JoinApplicationTextLimitError extends Error {
   }
 }
 
-export function submitApplication(draft: JoinApplicationDraft) {
-  const contact = { email: draft.email, nickname: draft.nickname, qq: draft.qq }
+export function submitApplication(draft: JoinApplicationDraft, communityId: string, token: string) {
+  const contact = { qq: draft.qq }
   const body: components['schemas']['JoinApplicationRequest'] = draft.form.applicationType === 'new'
     ? { application: { ...contact, form: draft.form }, proofs: [] }
     : { application: { ...contact, form: draft.form }, proofs: draft.proofs.map(() => 'binary') }
@@ -20,7 +20,9 @@ export function submitApplication(draft: JoinApplicationDraft) {
   const parts = new FormData()
   parts.append('application', application, 'application.json')
   for (const file of draft.proofs) parts.append('proofs', file, file.name)
-  return api.POST('/join/applications', {
+  return api.POST('/communities/{communityId}/applications', {
+    params: { path: { communityId } },
+    headers: { Authorization: `Bearer ${token}` },
     body: parts,
     timeout: 120_000,
     alert: false,

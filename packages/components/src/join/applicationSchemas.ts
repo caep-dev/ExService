@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { invitationEmailSchema } from "@components/src/auth/InvitationForms";
-import { nicknameSchema } from "@components/src/profileValidation";
 
 export const proofExtensions = [
   "png",
@@ -77,8 +75,6 @@ const consent = z
   .refine((value) => value === true, "请阅读并确认此项承诺")
   .transform(() => true as const);
 const contact = {
-  email: invitationEmailSchema,
-  nickname: nicknameSchema,
   qq: z.string().regex(/^[0-9]{5,13}$/, "QQ 须为 5 至 13 位数字"),
 };
 const commonForm = {

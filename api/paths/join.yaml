@@ -1,9 +1,12 @@
-/join/applications:
+/communities/{communityId}/applications:
   post:
     operationId: submitJoinApplication
     summary: Submit one complete join application
-    description: Exactly one application JSON part; new players cannot attach proofs. Each proof carries its raw file bytes in a separate multipart part with the same proofs field name, without percent encoding. Proof parts retain their supplied media type; the server validates extension and byte signatures independently of that media type. One normalized email may apply only once across all histories and categories. Existing history returns 409 JOIN_APPLICATION_EXISTS before account-only EMAIL_IN_USE. Validation and atomic persistence complete before success. All responses use no-store.
-    security: []
+    description: Authenticated lifetime application for the path community. Applicant ownership and contact snapshots come
+      from the current account. One multipart JSON part {qq,form} and optional proofs commit atomically. Cfx is a
+      requirement, not a deduplication key.
+    security:
+      - bearerAuth: []
     tags:
       - authentication
     x-fastify-config:
@@ -24,276 +27,240 @@
       content:
         multipart/form-data:
           schema:
-            $ref: "../openapi.yaml#/components/schemas/JoinApplicationRequest"
+            $ref: ../openapi.yaml#/components/schemas/JoinApplicationRequest
           encoding:
             application:
               contentType: application/json
             proofs:
-              contentType: '*/*'
+              contentType: "*/*"
     responses:
       "202":
         description: Successful operation; not cacheable.
         headers:
           X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
+            $ref: ../openapi.yaml#/components/headers/RequestId
           Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
+            $ref: ../openapi.yaml#/components/headers/CacheControl
         content:
           application/json:
             schema:
-              $ref: "../openapi.yaml#/components/schemas/JoinApplicationReceived"
+              $ref: ../openapi.yaml#/components/schemas/JoinApplicationReceived
       "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "408":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "409":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "413":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "415":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "429":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/RetryableErrorResponse
       "500":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "503":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/RetryableErrorResponse
       default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-/join/applications/query:
-  post:
-    operationId: queryJoinApplicationResult
-    summary: Read the minimal join application result
-    description: Read-only snapshot; six closed status/nextAction pairs, no email or personal information. Missing applications return 200 not_found, including account-only legacy users. A completed invitation with an existing user wins over newer history; otherwise use createdAt DESC, id DESC and latest invitation issuedAt DESC, id DESC. Expiry calculation never writes business state. All responses use no-store.
-    security: []
-    tags:
-      - authentication
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "../openapi.yaml#/components/schemas/JoinApplicationQueryRequest"
-    responses:
-      "200":
-        description: Successful operation; not cacheable.
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/JoinApplicationResult"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "429":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
-      "500":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-/admin/join/applications:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+    parameters:
+      - &a1
+        name: communityId
+        in: path
+        required: true
+        schema:
+          $ref: ../openapi.yaml#/components/schemas/CommunityId
+/admin/communities/{communityId}/applications:
   get:
     operationId: listJoinApplications
     summary: listJoinApplications
-    security: []
     tags:
       - authentication
-    responses:
-      "200":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/JoinApplicationList"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+    security:
+      - bearerAuth: []
     parameters:
-      - name: view
+      - *a1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 9007199254740991
+          default: 0
+      - name: status
         in: query
         schema:
           type: string
           enum:
             - pending
+            - approved
+            - rejected
+      - name: source
+        in: query
+        schema:
+          type: string
+          enum:
+            - live
+            - legacy
             - all
-          default: pending
-      - name: limit
-        in: query
-        schema:
-          type: string
-          pattern: ^([1-9]|[1-4][0-9]|50)$
-          default: "20"
-      - name: offset
-        in: query
-        schema:
-          type: string
-          pattern: ^(0|[1-9][0-9]{0,8})$
-          default: "0"
-/admin/join/applications/{applicationId}:
+          default: live
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: &a2
+          X-Request-Id:
+            $ref: ../openapi.yaml#/components/headers/RequestId
+          Cache-Control:
+            $ref: ../openapi.yaml#/components/headers/CacheControl
+          Referrer-Policy:
+            schema:
+              type: string
+              const: no-referrer
+          X-Content-Type-Options:
+            $ref: ../openapi.yaml#/components/headers/ContentTypeOptions
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/JoinApplicationList
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/admin/communities/{communityId}/applications/{applicationId}:
   get:
     operationId: getJoinApplication
     summary: getJoinApplication
-    security: []
     tags:
       - authentication
-    responses:
-      "200":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/JoinApplicationDetail"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "404":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+    security:
+      - bearerAuth: []
     parameters:
-      - name: applicationId
+      - *a1
+      - &a3
+        name: applicationId
         in: path
         required: true
         schema:
-          $ref: "../openapi.yaml#/components/schemas/Uuid"
-/admin/join/applications/{applicationId}/approve:
+          $ref: ../openapi.yaml#/components/schemas/Uuid
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a2
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/JoinApplicationDetail
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/admin/communities/{communityId}/applications/{applicationId}/approve:
   post:
     operationId: approveJoinApplication
     summary: approveJoinApplication
-    security: []
     tags:
       - authentication
-    responses:
-      "200":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/JoinApplicationDetail"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "404":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "409":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "429":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
-      default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+    security:
+      - bearerAuth: []
+    parameters:
+      - *a1
+      - *a3
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../openapi.yaml#/components/schemas/JoinReviewRequest"
-    parameters:
-      - name: applicationId
-        in: path
-        required: true
-        schema:
-          $ref: "../openapi.yaml#/components/schemas/Uuid"
-/admin/join/applications/{applicationId}/reject:
+            $ref: ../openapi.yaml#/components/schemas/JoinReviewRequest
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers: *a2
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/JoinApplicationDetail
+      "400":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "409":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/admin/communities/{communityId}/applications/{applicationId}/reject:
   post:
     operationId: rejectJoinApplication
     summary: rejectJoinApplication
-    security: []
     tags:
       - authentication
-    responses:
-      "200":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/JoinApplicationDetail"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "404":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "409":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+    security:
+      - bearerAuth: []
+    parameters:
+      - *a1
+      - *a3
     requestBody:
       required: true
       content:
         application/json:
           schema:
-            $ref: "../openapi.yaml#/components/schemas/JoinReviewRequest"
-    parameters:
-      - name: applicationId
-        in: path
-        required: true
-        schema:
-          $ref: "../openapi.yaml#/components/schemas/Uuid"
-/admin/join/applications/{applicationId}/invitations:
-  post:
-    operationId: resendJoinInvitation
-    summary: resendJoinInvitation
-    security: []
-    tags:
-      - authentication
+            $ref: ../openapi.yaml#/components/schemas/JoinReviewRequest
     responses:
       "200":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
+        description: Successful operation; not cacheable.
+        headers: *a2
         content:
           application/json:
             schema:
-              $ref: "../openapi.yaml#/components/schemas/JoinApplicationDetail"
+              $ref: ../openapi.yaml#/components/schemas/JoinApplicationDetail
       "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "401":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "404":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "409":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "429":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "../openapi.yaml#/components/schemas/JoinReviewRequest"
-    parameters:
-      - name: applicationId
-        in: path
-        required: true
-        schema:
-          $ref: "../openapi.yaml#/components/schemas/Uuid"
-/admin/join/applications/{applicationId}/attachments/{attachmentId}:
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+/admin/communities/{communityId}/applications/{applicationId}/attachments/{attachmentId}:
   get:
     operationId: downloadJoinApplicationAttachment
     summary: Download an application proof attachment
-    description: "Development review access only. Missing or mismatched application/attachment pairs return 404 JOIN_ATTACHMENT_NOT_FOUND. Always download; never preview. Two response slots are acquired before attachment reads; capacity failure is 503 and Retry-After: 5. A 60 second response deadline terminates started connections without a second JSON response. All responses use no-store."
-    security: []
+    description: Authorized community reviewer download. Check community, application and attachment ownership in one read
+      snapshot. Original bounded bytes only; no inline preview. Existing response slot and deadline budgets apply.
+    security:
+      - bearerAuth: []
     tags:
       - authentication
     x-fastify-config:
@@ -301,24 +268,25 @@
         slots: 2
         deadlineMs: 60000
     parameters:
+      - *a1
       - name: applicationId
         in: path
         required: true
         schema:
-          $ref: "../openapi.yaml#/components/schemas/Uuid"
+          $ref: ../openapi.yaml#/components/schemas/Uuid
       - name: attachmentId
         in: path
         required: true
         schema:
-          $ref: "../openapi.yaml#/components/schemas/Uuid"
+          $ref: ../openapi.yaml#/components/schemas/Uuid
     responses:
       "200":
         description: Original attachment bytes.
         headers:
           X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
+            $ref: ../openapi.yaml#/components/headers/RequestId
           Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
+            $ref: ../openapi.yaml#/components/headers/CacheControl
           Content-Disposition:
             description: attachment; safe ASCII filename fallback and UTF-8 filename*.
             required: true
@@ -336,144 +304,14 @@
               type: string
               format: binary
       "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "404":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "500":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "503":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
-/auth/invitations/check:
-  post:
-    operationId: checkInvitationEligibility
-    summary: checkInvitationEligibility
-    security: []
-    tags:
-      - authentication
-    responses:
-      "200":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/InvitationEligibility"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "404":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "409":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "429":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
-      default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "../openapi.yaml#/components/schemas/InvitationEligibilityRequest"
-/auth/invitations/code:
-  post:
-    operationId: requestInvitationCode
-    summary: requestInvitationCode
-    security: []
-    tags:
-      - authentication
-    responses:
-      "202":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/InvitationCodeAccepted"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "429":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
-      default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "../openapi.yaml#/components/schemas/InvitationCodeRequest"
-/auth/invitations/verify:
-  post:
-    operationId: verifyInvitationCode
-    summary: verifyInvitationCode
-    security: []
-    tags:
-      - authentication
-    responses:
-      "200":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/InvitationVerified"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "429":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
-      default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "../openapi.yaml#/components/schemas/InvitationVerifyRequest"
-/auth/invitations/complete:
-  post:
-    operationId: completeInvitationRegistration
-    summary: completeInvitationRegistration
-    security: []
-    tags:
-      - authentication
-    responses:
-      "200":
-        description: Successful operation
-        headers:
-          X-Request-Id:
-            $ref: '../openapi.yaml#/components/headers/RequestId'
-          Cache-Control:
-            $ref: "../openapi.yaml#/components/headers/CacheControl"
-        content:
-          application/json:
-            schema:
-              $ref: "../openapi.yaml#/components/schemas/InvitationRegistrationCompleted"
-      "400":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "401":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "409":
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-      "429":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "404":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
+      "500":
+        $ref: ../openapi.yaml#/components/responses/ErrorResponse
       "503":
-        $ref: "../openapi.yaml#/components/responses/RetryableErrorResponse"
-      default:
-        $ref: "../openapi.yaml#/components/responses/ErrorResponse"
-    requestBody:
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: "../openapi.yaml#/components/schemas/InvitationCompleteRequest"
+        $ref: ../openapi.yaml#/components/responses/RetryableErrorResponse

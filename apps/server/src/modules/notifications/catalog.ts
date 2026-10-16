@@ -17,6 +17,8 @@ export const NOTIFICATION_EVENT_TYPES = [
   'community.announcement.published',
   'community.announcement.withdrawn',
   'personal.notice.issued',
+  'join.application.approved',
+  'join.application.rejected',
 ] as const
 export type NotificationEventType = typeof NOTIFICATION_EVENT_TYPES[number]
 
@@ -31,9 +33,18 @@ interface CatalogEntry {
   /** 是否创建新的 receipt（撤回只改变内容生命周期，不再建收件）。 */
   readonly createsReceipt: boolean
   readonly sourceLabel: string
+  readonly audiencePolicy?: 'single_existing_user'
 }
 
 const CATALOG: Record<NotificationEventType, CatalogEntry> = {
+  'join.application.approved': {
+    eventType: 'join.application.approved', version: EVENT_VERSION, scope: 'personal', category: 'service_notice',
+    necessity: 'necessary', createsReceipt: true, sourceLabel: '社区申请', audiencePolicy: 'single_existing_user',
+  },
+  'join.application.rejected': {
+    eventType: 'join.application.rejected', version: EVENT_VERSION, scope: 'personal', category: 'service_notice',
+    necessity: 'necessary', createsReceipt: true, sourceLabel: '社区申请', audiencePolicy: 'single_existing_user',
+  },
   'community.announcement.published': {
     eventType: 'community.announcement.published',
     version: EVENT_VERSION,

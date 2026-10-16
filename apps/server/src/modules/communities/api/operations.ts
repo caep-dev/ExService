@@ -1,0 +1,4 @@
+import { listCommunities,getCommunity,listMyCommunityStatuses,getMyCommunityStatus,getMyCommunityReviewAccess,
+  createCommunity,updateCommunity,listCommunityReviewers,grantCommunityReviewer,revokeCommunityReviewer } from './handlers.js'
+export const operations = {listCommunities,getCommunity,listMyCommunityStatuses,getMyCommunityStatus,getMyCommunityReviewAccess,
+  createCommunity,updateCommunity,listCommunityReviewers,grantCommunityReviewer,revokeCommunityReviewer} as const

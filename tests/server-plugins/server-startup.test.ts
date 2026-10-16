@@ -12,7 +12,7 @@ vi.mock('@server/src/modules/profile/schema-check', () => ({ assertProfileSchema
 vi.mock('@server/src/domains/community/schema-check', () => ({ assertCommunitySchemaAvailable: async () => {} }))
 vi.mock('@server/src/domains/join/applications/schema-check', () => ({ assertJoinSchemaAvailable: async () => {} }))
 vi.mock('@server/src/modules/auth/crypto', () => ({ parseAuthCodeHmacKey: () => Buffer.alloc(32) }))
-vi.mock('@server/src/create-services', () => ({ createAuthServices: () => ({ authServices: {}, joinServices: {}, invitationServices: {} }) }))
+vi.mock('@server/src/create-services', () => ({ createAuthServices: () => ({ authServices: {}, passwordHasher:{} }), createRegistrationServices:()=>({joinServices:{},identityLinkServices:{},registrationServices:{},communityServices:{}}) }))
 vi.mock('@server/src/modules/profile/service', () => ({ ProfileService: class {}, avatarDirectory: () => '', publicAvatarBaseUrl: () => '' }))
 vi.mock('@server/src/modules/storage/factory', () => ({ createStorageModule: () => ({}) }))
 vi.mock('@server/src/modules/storage/config', () => ({ parseStorageConfig: () => ({}), StorageConfigError: class extends Error {} }))
@@ -28,7 +28,7 @@ vi.mock('@server/src/modules/notifications/factory', () => ({
 vi.mock('@server/src/app', () => ({ createApp: state.create }))
 const require = createRequire(new URL('../../apps/server/package.json', import.meta.url))
 const Fastify = require('fastify')
-beforeEach(() => { vi.resetModules(); vi.clearAllMocks(); process.exitCode = 0; vi.stubEnv('SERVER_PORT', '8080'); vi.spyOn(console, 'error').mockImplementation(() => {}) })
+beforeEach(() => { vi.resetModules(); vi.clearAllMocks(); process.exitCode = 0; vi.stubEnv('SERVER_PORT', '8080');vi.stubEnv('SERVER_PUBLIC_WEB_BASE_URL','http://127.0.0.1:8080'); vi.spyOn(console, 'error').mockImplementation(() => {}) })
 afterEach(() => { process.exitCode = 0; vi.restoreAllMocks(); vi.unstubAllEnvs(); state.close.mockReset().mockResolvedValue(undefined); state.check.mockReset().mockResolvedValue(undefined) })
 
 it.each(['BUSINESS_PLUGIN_DUPLICATE_NAME', 'BUSINESS_PLUGIN_MISSING_DEPENDENCY', 'BUSINESS_PLUGIN_BOOT_FAILED'] as const)('routes %s to actual server output and closes once', async code => {

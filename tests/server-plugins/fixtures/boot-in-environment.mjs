@@ -6,7 +6,8 @@ import { pathToFileURL } from 'node:url'
 const [directory, extension, probe] = process.argv.slice(2)
 const load = path => import(pathToFileURL(join(directory, `${path}.${extension}`)).href)
 const { createApp } = await load('app')
-const { createAuthServices } = await load('create-services')
+const { createAuthServices,createRegistrationServices } = await load('create-services')
+const {createCfxServices}=await load('modules/cfx/service')
 const { ProfileService } = await load('modules/profile/service')
 const { createStorageModule } = await load('modules/storage/factory')
 const { parseStorageConfig } = await load('modules/storage/config')
@@ -18,15 +19,17 @@ const { BusinessPluginLoadError, formatBusinessPluginError } = await load('busin
 const owned = mkdtempSync(join(tmpdir(), 'exwebsite-env-'))
 let closes = 0, starts = 0
 const database = {
-  query: async () => { throw new Error('NO_DATABASE_QUERIES_ALLOWED') },
+  query: async sql => {if(sql.startsWith('UPDATE auth_registration_deliveries SET status='))return {rows:[],rowCount:0};throw new Error('NO_BUSINESS_DATABASE_QUERIES_ALLOWED')},
   transaction: async run => run(database),
   close: async () => { closes++ },
 }
+const auth=createAuthServices({db:database,codeHmacKey:Buffer.alloc(32,7)}),cfxServices=createCfxServices({config:{enabled:false}});
+const notifications=createNotificationModule({db:database,tokenKey:Buffer.alloc(32,3)});
 const services = {
-  ...createAuthServices({ db: database, codeHmacKey: Buffer.alloc(32, 7) }),
+  ...auth,cfxServices,...createRegistrationServices({db:database,...auth,codeHmacKey:Buffer.alloc(32,7),cfxServices,notifications}),
   profileServices: new ProfileService(database, owned, 'http://localhost/api/avatars'),
   storageServices: createStorageModule({ config: parseStorageConfig({}, { dataRoot: owned }) }),
-  notifications: createNotificationModule({ db: database, tokenKey: Buffer.alloc(32, 3) }),
+  notifications,
 }
 services.clickupServices = createClickUpServices({ kind: 'disabled' })
 services.supportServices = createSupportServices({ db: database, clickup: services.clickupServices, profile: services.profileServices })

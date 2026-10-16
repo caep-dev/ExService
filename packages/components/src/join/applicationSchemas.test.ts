@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { newJoinApplicationSchema, experiencedJoinApplicationSchema, proofFilesSchema } from '@components/src/join/applicationSchemas'
 
 export const validNewDraft = {
-  email: ' Player@Example.com ', nickname: '玩家', qq: '0012345', proofs: [],
+  qq: '0012345', proofs: [],
   form: { applicationType: 'new', birthDate: '2000-02-29', applicantCategory: '100', department: 'leo',
     freeTime: '每晚都有空', discoveryChannels: ['friends'],
     answers: { fiveMExperience: '没有接触过', emergencyRoleplayKnowledge: '不了解', emergencyProceduresKnowledge: '愿意学习', rpUnderstanding: '扮演角色', frpUnderstanding: '不符合角色扮演的行为' },
@@ -18,14 +18,14 @@ export const validExperiencedDraft = {
 describe('完整申请规则', () => {
   it('normalizes contact fields while preserving leading QQ zeros', () => {
     const result = newJoinApplicationSchema.parse(validNewDraft)
-    expect(result.email).toBe('player@example.com')
+    expect(result).not.toHaveProperty('email')
     expect(result.qq).toBe('0012345')
   })
   it('counts Unicode codepoints after trim for written answers', () => {
     expect(experiencedJoinApplicationSchema.safeParse(validExperiencedDraft).success).toBe(true)
     expect(experiencedJoinApplicationSchema.safeParse({ ...validExperiencedDraft, form: { ...validExperiencedDraft.form, answers: { ...validExperiencedDraft.form.answers, deescalationEssay: ' 😀'.trim().repeat(149) } } }).success).toBe(false)
-    expect(newJoinApplicationSchema.safeParse({ ...validNewDraft, nickname: '😀'.repeat(32) }).success).toBe(true)
-    expect(newJoinApplicationSchema.safeParse({ ...validNewDraft, nickname: '😀'.repeat(33) }).success).toBe(false)
+    expect(newJoinApplicationSchema.safeParse({ ...validNewDraft, nickname: 'injected' }).success).toBe(false)
+    expect(newJoinApplicationSchema.safeParse({ ...validNewDraft, email: 'injected@example.com' }).success).toBe(false)
     expect(newJoinApplicationSchema.safeParse({ ...validNewDraft, form: { ...validNewDraft.form, answers: { ...validNewDraft.form.answers, rpUnderstanding: `  ${'😀'.repeat(4000)}  ` } } }).success).toBe(true)
     expect(newJoinApplicationSchema.safeParse({ ...validNewDraft, form: { ...validNewDraft.form, answers: { ...validNewDraft.form.answers, rpUnderstanding: '😀'.repeat(4001) } } }).success).toBe(false)
   })

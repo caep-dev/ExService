@@ -7,6 +7,7 @@ import {
   AccordionContent,
   Button,
   ExMessage,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@exre/exui";
 import { ArrowUpRight, CircleCheck } from "lucide-react";
 import { HalftoneDots } from "@paper-design/shaders-react";
@@ -24,11 +25,25 @@ import {
 import { communityDestinations, communityLinks } from "@web/src/join/community";
 import { getJoinHeroImages } from "@web/src/join/hero-images";
 import styles from "@web/src/pages/JoinPage/Rifling-911/JoinPage.module.scss";
+import type { components } from '@workspace/api-client';
+import { api } from '@web/src/api/client';
+import { currentCommunityToken, useCommunityToken } from '@web/src/join/session';
+import { CommunityAuthentication } from '@web/src/join/CommunityAuthentication';
+import { IdentityLinksExperience } from '@web/src/settings/IdentityLinksExperience';
+import { removeMatchingToken } from '@web/src/auth/storage';
 
 const heroImages = getJoinHeroImages("rifling-911");
 
 export function JoinPage() {
+  const token = useCommunityToken();
+  const previousToken = useRef(token);
+  const [authOpen, setAuthOpen] = useState(false), [linksOpen, setLinksOpen] = useState(false), [statusReload, setStatusReload] = useState(0);
+  const [community, setCommunity] = useState<components['schemas']['Community'] | null>(null);
+  const [access, setAccess] = useState<{ token: string; account: components['schemas']['CurrentUser']; status: components['schemas']['MyCommunityStatus'] } | null>(null);
+  const [accessError, setAccessError] = useState<string | null>(null);
+  const currentAccess = access?.token === token ? access : null;
   const [heroIndex, setHeroIndex] = useState(0);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [applicationType, setApplicationType] =
     useState<JoinApplicationType | null>(null);
   const [step, setStep] = useState(0),
@@ -55,13 +70,34 @@ export function JoinPage() {
     >
   >({});
   useEffect(() => {
+    if (previousToken.current !== null && previousToken.current !== token) {
+      drafts.current = {}; setApplicationType(null); setStep(0); setReceived(false); setHasSubmitted(false); setBusy(false); pending.current = false; setLinksOpen(false); setAuthOpen(false);
+    }
+    previousToken.current = token;
+  }, [token]);
+  useEffect(() => {
+    const abort = new AbortController(); setAccess(null); setCommunity(null); setAccessError(null);
+    void api.GET('/communities/{communityId}', { params: { path: { communityId: 'rifling-911' } }, signal: abort.signal, alert: false })
+      .then(value => { if (!abort.signal.aborted) setCommunity(value) })
+      .catch(() => { if (!abort.signal.aborted) setAccessError('无法读取社区要求，请重试'); });
+    if (token) void Promise.all([
+      api.GET('/auth/me', { headers: { Authorization: `Bearer ${token}` }, signal: abort.signal, alert: false }),
+      api.GET('/auth/me/communities/{communityId}', { params: { path: { communityId: 'rifling-911' } }, headers: { Authorization: `Bearer ${token}` }, signal: abort.signal, alert: false }),
+    ]).then(([account, status]) => { if (!abort.signal.aborted && currentCommunityToken() === token) setAccess({ token, account, status }); })
+      .catch(issue => { if (!abort.signal.aborted && currentCommunityToken() === token) {
+        setAccessError('无法确认本人申请状态，请重试');
+        if (issue instanceof ExAxiosError && issue.status === 401) removeMatchingToken(localStorage, token);
+      } });
+    return () => abort.abort();
+  }, [token, statusReload]);
+  useEffect(() => {
     live.current = true;
     return () => {
       live.current = false;
     };
   }, []);
   function open(type: JoinApplicationType, button: HTMLButtonElement) {
-    if (pending.current) return;
+    if (pending.current || hasSubmitted || currentAccess?.status.application) return;
     trigger.current = button;
     setReceived(false);
     setServerAction(null);
@@ -81,20 +117,27 @@ export function JoinPage() {
   }
   async function submit(draft: JoinApplicationDraft) {
     if (pending.current) return;
+    if (!token) { setAuthOpen(true); return; }
+    if (!currentAccess || !community) { form.current?.setError('请先刷新并确认本人申请状态'); return; }
+    if (hasSubmitted || currentAccess.status.application) { form.current?.setError('本账号已提交过该社区申请，不能重复提交'); setServerAction('query'); return; }
+    if (!currentAccess.status.requirementsMet) { setLinksOpen(true); form.current?.setError('请先满足社区关联要求，再确认提交'); return; }
+    const submittedToken = token;
+    const active = () => live.current && currentCommunityToken() === submittedToken;
     pending.current = true;
     setBusy(true);
     setServerAction(null);
     try {
-      const result = await submitApplication(draft);
-      if (!live.current) return;
+      const result = await submitApplication(draft, 'rifling-911', submittedToken);
+      if (!active()) return;
       if (result.status === "received") {
         delete drafts.current[draft.form.applicationType];
         setReceived(true);
+        setHasSubmitted(true);
         ExMessage.info("申请已收到，请等待社区审核安排");
         return;
       }
     } catch (error) {
-      if (!live.current) return;
+      if (!active()) return;
       if (error instanceof JoinApplicationTextLimitError) { form.current?.setError(error.message); return; }
       const status = error instanceof ExAxiosError ? error.status : undefined;
       const code = error instanceof ExAxiosError ? error.code : undefined;
@@ -102,11 +145,14 @@ export function JoinPage() {
         status === 409 &&
         code === "JOIN_APPLICATION_EXISTS"
       ) {
-        form.current?.setError("该邮箱已有申请，不能重复提交", "email");
+        form.current?.setError("本账号已提交过该社区申请，不能重复提交");
         setServerAction("query");
-      } else if (status === 409 && code === "EMAIL_IN_USE") {
-        form.current?.setError("该邮箱已有正式账号，请前往登录", "email");
-        setServerAction("login");
+        setHasSubmitted(true);
+        setStatusReload(value => value + 1);
+      } else if (code === 'COMMUNITY_REQUIREMENT_UNMET') {
+        form.current?.setError('当前社区关联要求尚未满足，请刷新并关联 Cfx'); setStatusReload(value => value + 1); setLinksOpen(true);
+      } else if (status === 401) {
+        removeMatchingToken(localStorage, submittedToken);
       } else {
         const message =
           status === 429
@@ -121,8 +167,7 @@ export function JoinPage() {
         form.current?.setError(message);
       }
     } finally {
-      pending.current = false;
-      if (live.current) setBusy(false);
+      if (active()) { pending.current = false; setBusy(false); }
     }
   }
   const heroImage = heroImages[heroIndex];
@@ -182,7 +227,7 @@ export function JoinPage() {
           <div className={styles.actions} aria-label="申请入口">
             <Button
               className={styles.primaryAction}
-              disabled={busy}
+              disabled={busy || Boolean(currentAccess?.status.application) || hasSubmitted}
               onClick={(event) => open("new", event.currentTarget)}
             >
               新玩家申请 <ArrowUpRight aria-hidden="true" />
@@ -190,12 +235,17 @@ export function JoinPage() {
             <Button
               className={styles.secondaryAction}
               variant="outline"
-              disabled={busy}
+              disabled={busy || Boolean(currentAccess?.status.application) || hasSubmitted}
               onClick={(event) => open("experienced", event.currentTarget)}
             >
               调转申请 <ArrowUpRight aria-hidden="true" />
             </Button>
           </div>
+          <p>{community ? `${community.displayName}：${community.requiresCfx ? '提交申请需要关联 Cfx' : '无需第三方关联'}` : '正在读取社区要求'}</p>
+          {currentAccess?.status.application && <p>本账号已有申请，请查看本人结果；不能重新提交。</p>}
+          {accessError && <p role="alert">{accessError}</p>}
+          <Button variant="outline" onClick={() => setStatusReload(value => value + 1)}>刷新申请资格</Button>
+          {token && <Button variant="outline" onClick={() => setLinksOpen(true)}>管理关联账户</Button>}
           <p className={styles.experienceNote}>
             调转申请适用于拥有 100 小时以上相关经历的玩家
           </p>
@@ -229,7 +279,7 @@ export function JoinPage() {
         <section className={styles.section} aria-labelledby="join-requirements">
           <h2 id="join-requirements">申请须知</h2>
           <p>
-            申请前请阅读社区置顶指引，确认理解社区规则。如实填写完整资料，申请阶段不设置密码，也不会创建正式账号。
+            申请前请阅读社区置顶指引，确认理解社区规则。请先注册并登录 Exre 账号，满足社区关联要求后如实提交完整资料。
           </p>
           <ul className={styles.requirements}>
             <li>
@@ -280,8 +330,8 @@ export function JoinPage() {
             </li>
             <li>
               <span aria-hidden="true">03</span>
-              <h3>查收邮箱邀请</h3>
-              <p>获批后验证邮箱，完善账号。</p>
+              <h3>查看成员资格</h3>
+              <p>获批后获得本账号的社区成员资格。</p>
             </li>
             <li>
               <span aria-hidden="true">04</span>
@@ -290,7 +340,7 @@ export function JoinPage() {
             </li>
           </ol>
           <p className={styles.finePrint}>
-            审核同意不代表邮件已送达，未收到邀请可进入完善注册流程按提示重发。
+            审核结果通过站内通知及本人结果页查询，当前关联要求与成员资格分别展示。
           </p>
         </section>
         <section
@@ -331,15 +381,15 @@ export function JoinPage() {
               <AccordionTrigger>可以更换类别或再次申请吗？</AccordionTrigger>
               <AccordionContent>
                 <p>
-                  同一邮箱只能提交一次，拒绝、邀请到期和完成注册都不释放名额。请通过结果查询了解状态。
+                  每个 Exre 账号对每个社区只能申请一次，待审核、通过和拒绝均不会释放机会。请通过本人结果页了解状态。
                 </p>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="faq-5">
-              <AccordionTrigger>未收到邀请或邀请到期怎么办？</AccordionTrigger>
+              <AccordionTrigger>解除 Cfx 关联后需要重新申请吗？</AccordionTrigger>
               <AccordionContent>
                 <p>
-                  已通过时前往完善注册，按既有流程检查资格或重发验证码；邀请到期请联系社区重新签发，无需重填申请。
+                  解除或更换 Cfx 关联不会删除原申请和成员资格，也不能重新申请；请在关联账户中重新满足社区当前要求。
                 </p>
               </AccordionContent>
             </AccordionItem>
@@ -349,7 +399,7 @@ export function JoinPage() {
           <div>
             <h2 id="join-contact">保持联系。</h2>
             <p>
-              请留意社区置顶指引与通知，通过社区工作人员了解面试或邀请安排。
+              请留意社区置顶指引与通知，通过社区工作人员了解面试和后续安排。
             </p>
           </div>
           {communityLinks.length > 0 && (
@@ -370,6 +420,8 @@ export function JoinPage() {
           key={applicationType}
           ref={form}
           open
+          account={currentAccess?.account}
+          submitDisabled={hasSubmitted || !!currentAccess?.status.application}
           applicationType={applicationType}
           resultTitle="申请已收到"
           initialDraft={drafts.current[applicationType]?.values}
@@ -384,13 +436,13 @@ export function JoinPage() {
             event.preventDefault();
             trigger.current?.focus();
           }}
-          serverAction={
-            serverAction === "query" ? (
-              <Link to="/join/result">查询已有申请结果</Link>
-            ) : serverAction === "login" ? (
-              <Link to="/login">前往登录</Link>
-            ) : undefined
-          }
+          serverAction={<>
+            {!token && <Button type="button" onClick={() => setAuthOpen(true)}>登录或注册后继续申请</Button>}
+            {token && !currentAccess && <p role="status">正在确认当前账号与申请状态</p>}
+            {accessError && <p role="alert">{accessError}</p>}
+            {currentAccess && !currentAccess.status.requirementsMet && <Button type="button" onClick={() => setLinksOpen(true)}>关联 Cfx 后继续</Button>}
+            {serverAction === 'query' && <Link to="/join/result">查询已有申请结果</Link>}
+          </>}
         >
           {received ? (
             <section className={styles.applicationSuccess} aria-live="polite">
@@ -401,7 +453,7 @@ export function JoinPage() {
               />
               <p className={styles.successLead}>资料提交成功</p>
               <p>
-                申请资料已提交，接下来将等待安排远程语音面试。进行面试后，社区会确认申请结果，请留意申请邮箱与后续通知。
+                申请资料已提交，请留意站内通知并在本人结果页查询。面试和学院安排由社区另行通知。
               </p>
               <Button asChild variant="outline">
                 <Link to="/join/result">查询申请结果</Link>
@@ -411,6 +463,8 @@ export function JoinPage() {
           ) : undefined}
         </CompleteJoinApplicationModal>
       )}
+      <Dialog open={authOpen} onOpenChange={setAuthOpen}><DialogContent><DialogHeader><DialogTitle>登录后继续申请</DialogTitle><DialogDescription>草稿仅保留在当前页面，登录成功后请确认提交。</DialogDescription></DialogHeader><CommunityAuthentication onSessionCreated={() => { setAuthOpen(false); setStatusReload(value => value + 1); }} /></DialogContent></Dialog>
+      <Dialog open={linksOpen && token !== null} onOpenChange={value => { setLinksOpen(value); if (!value) setStatusReload(count => count + 1); }}><DialogContent><DialogHeader><DialogTitle>社区关联要求</DialogTitle><DialogDescription>关联完成后关闭此窗口，刷新资格并继续原申请。</DialogDescription></DialogHeader><IdentityLinksExperience token={token} /><Button onClick={() => { setLinksOpen(false); setStatusReload(value => value + 1); }}>返回申请并刷新资格</Button></DialogContent></Dialog>
     </main>
   );
 }

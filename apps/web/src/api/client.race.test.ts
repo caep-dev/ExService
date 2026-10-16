@@ -3,6 +3,16 @@ import { createServer, type Server } from 'node:http'
 import { afterEach, expect, it, vi } from 'vitest'
 
 let server: Server | undefined
+function stubJoinLocation(origin: string, navigation: ReturnType<typeof vi.fn>): void {
+  const fakeLocation = { origin, href: `${origin}/join/rifling-911`, pathname: '/join/rifling-911', search: '', replace: navigation }
+  const fakeWindow = Object.create(window) as Window
+  Object.defineProperties(fakeWindow, {
+    location: { value: fakeLocation },
+    localStorage: { value: window.localStorage },
+  })
+  vi.stubGlobal('window', fakeWindow)
+  vi.stubGlobal('location', fakeLocation)
+}
 afterEach(async () => {
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
@@ -125,4 +135,109 @@ it('clears a matching persisted session and notifies the bound Web session', asy
     expect(window.location.pathname).toBe('/login')
     expect(window.location.search).toBe('?ssoRequestId=keep-this-container')
   } finally { unsubscribe() }
+})
+
+it.each([401, 503])('keeps the join page in place for replacement logout %s and restores normal expiry navigation', async logoutStatus => {
+  const requests: string[] = []
+  server = createServer((request, response) => {
+    requests.push(`${request.method} ${request.url} ${request.headers.authorization ?? ''}`)
+    response.setHeader('content-type', 'application/json')
+    if (request.url === '/api/auth/logout' || request.url === '/api/health') {
+      response.statusCode = request.url === '/api/auth/logout' ? logoutStatus : 401
+      response.end(JSON.stringify({ error: { code: logoutStatus === 503 && request.url === '/api/auth/logout' ? 'SERVICE_UNAVAILABLE' : 'SESSION_INVALID', message: 'expired', requestId: 'fixture' } }))
+      return
+    }
+    response.end(JSON.stringify({ status: 'ok' }))
+  })
+  await new Promise<void>(resolve => server!.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  if (!address || typeof address === 'string') throw new Error('expected fixture TCP address')
+  const fixtureOrigin = `http://127.0.0.1:${address.port}`
+  vi.stubEnv('VITE_API_BASE_URL', `${fixtureOrigin}/api`)
+  window.localStorage.setItem('exwebsite.auth.token', 'old-token')
+  const navigation = vi.fn()
+  stubJoinLocation(fixtureOrigin, navigation)
+  vi.resetModules()
+  const { installBrowserSession } = await import('@web/src/auth/session-install')
+  const { api } = await import('@web/src/api/client')
+  const { subscribeSessionChanges } = await import('@web/src/auth/storage')
+  const changes: Array<{ token: string | null; source: string; stored: string | null }> = []
+  const unsubscribe = subscribeSessionChanges((token, source) => changes.push({ token, source, stored: window.localStorage.getItem('exwebsite.auth.token') }))
+  const continuation = vi.fn()
+  const result = await installBrowserSession('new-token', () => true)
+  unsubscribe()
+  if (result.status === 'installed') continuation()
+  expect(result.status).toBe(logoutStatus === 401 ? 'installed' : 'failed')
+  expect(continuation).toHaveBeenCalledTimes(logoutStatus === 401 ? 1 : 0)
+  expect(window.localStorage.getItem('exwebsite.auth.token')).toBe(logoutStatus === 401 ? 'new-token' : 'old-token')
+  expect(navigation).not.toHaveBeenCalled()
+  expect(requests).toEqual(['POST /api/auth/logout Bearer old-token'])
+  expect(changes).toEqual(logoutStatus === 401
+    ? [{ token: null, source: 'http', stored: null }, { token: 'new-token', source: 'write', stored: 'new-token' }]
+    : [])
+
+  await expect(api.GET('/health', { alert: false })).rejects.toMatchObject({ code: 'SESSION_INVALID' })
+  expect(navigation).toHaveBeenCalledWith('/login')
+})
+
+it('does not suppress a concurrent protected expiry while replacement logout is pending', async () => {
+  let reached!: () => void, release!: () => void
+  const logoutReached = new Promise<void>(resolve => { reached = resolve })
+  const logoutGate = new Promise<void>(resolve => { release = resolve })
+  server = createServer(async (request, response) => {
+    if (request.url === '/api/auth/logout') { reached(); await logoutGate }
+    response.writeHead(401, { 'content-type': 'application/json' })
+    response.end(JSON.stringify({ error: { code: 'SESSION_INVALID', message: 'expired', requestId: 'fixture' } }))
+  })
+  await new Promise<void>(resolve => server!.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  if (!address || typeof address === 'string') throw new Error('expected fixture TCP address')
+  const fixtureOrigin = `http://127.0.0.1:${address.port}`
+  vi.stubEnv('VITE_API_BASE_URL', `${fixtureOrigin}/api`)
+  window.localStorage.setItem('exwebsite.auth.token', 'old-token')
+  const navigation = vi.fn()
+  stubJoinLocation(fixtureOrigin, navigation)
+  vi.resetModules()
+  const { installBrowserSession } = await import('@web/src/auth/session-install')
+  const { api } = await import('@web/src/api/client')
+  const installing = installBrowserSession('new-token', () => true)
+  await logoutReached
+  await expect(api.GET('/health', { alert: false })).rejects.toMatchObject({ code: 'SESSION_INVALID' })
+  expect(navigation).toHaveBeenCalledWith('/login')
+  release()
+  await installing
+})
+
+it('releases replacement handling after a cancelled sign-in', async () => {
+  let reached!: () => void, release!: () => void
+  const logoutReached = new Promise<void>(resolve => { reached = resolve })
+  const logoutGate = new Promise<void>(resolve => { release = resolve })
+  server = createServer(async (request, response) => {
+    if (request.url === '/api/auth/logout') { reached(); await logoutGate }
+    response.writeHead(401, { 'content-type': 'application/json' })
+    response.end(JSON.stringify({ error: { code: 'SESSION_INVALID', message: 'expired', requestId: 'fixture' } }))
+  })
+  await new Promise<void>(resolve => server!.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  if (!address || typeof address === 'string') throw new Error('expected fixture TCP address')
+  const fixtureOrigin = `http://127.0.0.1:${address.port}`
+  vi.stubEnv('VITE_API_BASE_URL', `${fixtureOrigin}/api`)
+  window.localStorage.setItem('exwebsite.auth.token', 'old-token')
+  const navigation = vi.fn()
+  stubJoinLocation(fixtureOrigin, navigation)
+  vi.resetModules()
+  const { installBrowserSession } = await import('@web/src/auth/session-install')
+  const { api } = await import('@web/src/api/client')
+  const { writeToken } = await import('@web/src/auth/storage')
+  let current = true
+  const installing = installBrowserSession('new-token', () => current)
+  await logoutReached
+  current = false
+  release()
+  expect(await installing).toEqual({ status: 'stale' })
+  expect(navigation).not.toHaveBeenCalled()
+  expect(window.localStorage.getItem('exwebsite.auth.token')).toBeNull()
+  writeToken(window.localStorage, 'other-token')
+  await expect(api.GET('/health', { alert: false })).rejects.toMatchObject({ code: 'SESSION_INVALID' })
+  expect(navigation).toHaveBeenCalledWith('/login')
 })

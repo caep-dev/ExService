@@ -43,6 +43,13 @@
       "when": 1792054890337,
       "tag": "0005_exotic_synch",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792054890338,
+      "tag": "0006_public_registration_communities",
+      "breakpoints": true
     }
   ]
 }

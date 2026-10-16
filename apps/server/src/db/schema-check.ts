@@ -4,6 +4,8 @@ import * as schemaTables from '@server/src/db/schema.js'
 import { SUPPORT_CONSTRAINT_DEFINITIONS, SUPPORT_INDEX_SIGNATURES } from './support-signatures.js'
 
 const tableDefinitions = [
+  schemaTables.authIdentityLinks, schemaTables.authRegistrationEmails, schemaTables.authRegistrationDeliveries,
+  schemaTables.authRegistrationGrants, schemaTables.communities, schemaTables.communityReviewers, schemaTables.communityMemberships,
   schemaTables.authUsers, schemaTables.authSessions, schemaTables.authSsoRequests,
   schemaTables.authOidcFlows, schemaTables.authOidcBindings, schemaTables.authIdentityOutbox,
   schemaTables.communityGroups, schemaTables.communityGroupMemberships,
@@ -22,7 +24,7 @@ const tableDefinitions = [
 // foreign-key names can exceed that limit; the catalog stores the truncated name.
 const catalogName = (name: string) => Buffer.from(name, 'utf8').subarray(0, 63).toString('utf8')
 
-export const APPLICATION_TABLES = [
+export const NOTIFICATION_APPLICATION_TABLES = [
   'auth_users', 'auth_sessions', 'auth_sso_requests', 'community_groups',
   'community_group_memberships', 'join_applications', 'join_application_email_registry',
   'join_application_forms', 'join_application_attachments', 'join_invitations',
@@ -31,10 +33,13 @@ export const APPLICATION_TABLES = [
   'notification_contents', 'notification_events', 'notification_event_recipients',
   'notification_user_streams', 'notification_receipts', 'notification_preferences',
   'notification_mutations', 'notification_clear_batches', 'notification_clear_batch_items',
-  'support_feedback_submissions', 'support_feedback_attachments',
 ] as const
 
-export const BASELINE_APPLICATION_TABLES = APPLICATION_TABLES.slice(0, 12)
+export const SUPPORT_APPLICATION_TABLES = [...NOTIFICATION_APPLICATION_TABLES,
+  'support_feedback_submissions', 'support_feedback_attachments'] as const
+
+export const APPLICATION_TABLES = [...SUPPORT_APPLICATION_TABLES, 'auth_identity_links', 'auth_registration_emails', 'auth_registration_deliveries', 'auth_registration_grants', 'communities', 'community_reviewers', 'community_memberships'] as const
+export const BASELINE_APPLICATION_TABLES = NOTIFICATION_APPLICATION_TABLES.slice(0, 12)
 
 const expectedIndexes = tableDefinitions.flatMap(table => [
   ...table.indexes.map(index => index.config.name)
@@ -183,7 +188,7 @@ export const APPLICATION_CONSTRAINT_DEFINITIONS = new Map<string, string>([
   ['notification_events.notification_events_scope_check', "CHECK (scope = ANY (ARRAY['community'::text, 'personal'::text]))"],
   ['notification_events.notification_events_source_revision_check', "CHECK (source_revision >= 1)"],
   ['notification_events.notification_events_status_check', "CHECK (projection_status = ANY (ARRAY['pending'::text, 'completed'::text, 'failed'::text]))"],
-  ['notification_events.notification_events_type_check', "CHECK (event_type = ANY (ARRAY['community.announcement.published'::text, 'community.announcement.withdrawn'::text, 'personal.notice.issued'::text]))"],
+  ['notification_events.notification_events_type_check', "CHECK (event_type = ANY (ARRAY['community.announcement.published'::text, 'community.announcement.withdrawn'::text, 'personal.notice.issued'::text, 'join.application.approved'::text, 'join.application.rejected'::text]))"],
   ['notification_mutations.notification_mutations_kind_check', "CHECK (kind = ANY (ARRAY['read_through'::text, 'clear'::text, 'restore'::text]))"],
   ['notification_mutations.notification_mutations_user_id_fk', "FOREIGN KEY (user_id) REFERENCES auth_users(id) ON DELETE RESTRICT"],
   ['notification_mutations.notification_mutations_user_id_request_id_pk', "PRIMARY KEY (user_id, request_id)"],
@@ -239,6 +244,69 @@ export const APPLICATION_INDEX_SIGNATURES = new Map<string, string>([
   ['notification_receipts.notification_receipts_user_sequence_unique', "UNIQUE btree (user_id, sequence)"],
   ['notification_user_streams.notification_user_streams_pkey', "UNIQUE btree (user_id)"],
 ])
+
+// PostgreSQL catalog definitions verified against migration 0003 in isolated PG18.
+for (const [name, definition] of [
+  ["auth_identity_links.auth_identity_links_provider_check", "CHECK (provider = 'cfx'::text)"],
+  ["auth_identity_links.auth_identity_links_subject_check", "CHECK (external_user_id ~ '^[1-9][0-9]*$'::text)"],
+  ["auth_identity_links.auth_identity_links_pkey", "PRIMARY KEY (id)"],
+  ["auth_registration_deliveries.auth_registration_deliveries_version_check", "CHECK (code_version >= 1)"],
+  ["auth_registration_deliveries.auth_registration_deliveries_status_check", "CHECK (status = ANY (ARRAY['pending'::text, 'sent'::text, 'failed'::text]))"],
+  ["auth_registration_deliveries.auth_registration_deliveries_finished_check", "CHECK (status = 'pending'::text AND finished_at IS NULL OR status <> 'pending'::text AND finished_at IS NOT NULL)"],
+  ["auth_registration_deliveries.auth_registration_deliveries_pkey", "PRIMARY KEY (id)"],
+  ["auth_registration_emails.auth_registration_emails_version_check", "CHECK (code_version >= 0)"],
+  ["auth_registration_emails.auth_registration_emails_failures_check", "CHECK (failed_attempts >= 0 AND failed_attempts <= 5)"],
+  ["auth_registration_emails.auth_registration_emails_material_check", "CHECK (code_hmac IS NULL AND code_expires_at IS NULL AND code_browser_binding_hash IS NULL OR code_hmac IS NOT NULL AND code_expires_at IS NOT NULL AND code_browser_binding_hash IS NOT NULL)"],
+  ["auth_registration_emails.auth_registration_emails_pkey", "PRIMARY KEY (id)"],
+  ["auth_registration_emails.auth_registration_emails_email_unique", "UNIQUE (email)"],
+  ["auth_registration_grants.auth_registration_grants_kind_check", "CHECK (kind = 'email'::text AND external_user_id IS NULL AND external_username IS NULL AND provider_email IS NULL OR kind = 'cfx'::text AND external_user_id IS NOT NULL AND external_user_id ~ '^[1-9][0-9]*$'::text AND external_username IS NOT NULL AND provider_email IS NOT NULL)"],
+  ["auth_registration_grants.auth_registration_grants_state_check", "CHECK (state = ANY (ARRAY['active'::text, 'processing'::text, 'completed'::text, 'failed'::text]))"],
+  ["auth_registration_grants.auth_registration_grants_processing_check", "CHECK (state <> 'processing'::text OR processing_started_at IS NOT NULL)"],
+  ["auth_registration_grants.auth_registration_grants_completed_check", "CHECK (state = 'completed'::text AND completed_at IS NOT NULL AND completed_user_id IS NOT NULL OR state <> 'completed'::text AND completed_at IS NULL AND completed_user_id IS NULL)"],
+  ["auth_registration_grants.auth_registration_grants_pkey", "PRIMARY KEY (id)"],
+  ["auth_registration_grants.auth_registration_grants_token_hash_unique", "UNIQUE (token_hash)"],
+  ["communities.communities_id_check", "CHECK (char_length(id) >= 1 AND char_length(id) <= 64 AND id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'::text)"],
+  ["communities.communities_display_name_check", "CHECK (char_length(display_name) >= 1 AND char_length(display_name) <= 80)"],
+  ["communities.communities_revision_check", "CHECK (config_revision >= 0)"],
+  ["communities.communities_pkey", "PRIMARY KEY (id)"],
+  ["community_memberships.community_memberships_user_id_community_id_pk", "PRIMARY KEY (user_id, community_id)"],
+  ["community_memberships.community_memberships_application_id_unique", "UNIQUE (application_id)"],
+  ["community_reviewers.community_reviewers_community_id_user_id_pk", "PRIMARY KEY (community_id, user_id)"],
+  ["auth_identity_links.auth_identity_links_user_id_auth_users_id_fk", "FOREIGN KEY (user_id) REFERENCES auth_users(id)"],
+  ["auth_registration_deliveries.auth_registration_deliveries_registration_email_id_auth_registr", "FOREIGN KEY (registration_email_id) REFERENCES auth_registration_emails(id)"],
+  ["auth_registration_grants.auth_registration_grants_completed_user_id_auth_users_id_fk", "FOREIGN KEY (completed_user_id) REFERENCES auth_users(id)"],
+  ["community_memberships.community_memberships_user_id_auth_users_id_fk", "FOREIGN KEY (user_id) REFERENCES auth_users(id)"],
+  ["community_memberships.community_memberships_community_id_communities_id_fk", "FOREIGN KEY (community_id) REFERENCES communities(id)"],
+  ["community_reviewers.community_reviewers_community_id_communities_id_fk", "FOREIGN KEY (community_id) REFERENCES communities(id)"],
+  ["community_reviewers.community_reviewers_user_id_auth_users_id_fk", "FOREIGN KEY (user_id) REFERENCES auth_users(id)"],
+  ["community_reviewers.community_reviewers_granted_by_user_id_auth_users_id_fk", "FOREIGN KEY (granted_by_user_id) REFERENCES auth_users(id)"],
+  ["join_applications.join_applications_community_id_communities_id_fk", "FOREIGN KEY (community_id) REFERENCES communities(id)"],
+  ["join_applications.join_applications_user_id_auth_users_id_fk", "FOREIGN KEY (user_id) REFERENCES auth_users(id)"],
+  ["join_applications.join_applications_owner_check", "CHECK (legacy_read_only OR user_id IS NOT NULL)"],
+  ["join_applications.join_applications_reviewer_check", "CHECK (status = 'pending'::text AND reviewed_by_user_id IS NULL OR status <> 'pending'::text AND (legacy_read_only OR reviewed_by_user_id IS NOT NULL))"],
+  ["community_memberships.community_memberships_application_owner_fk", "FOREIGN KEY (application_id, user_id, community_id) REFERENCES join_applications(id, user_id, community_id) ON DELETE RESTRICT"]
+] as const) APPLICATION_CONSTRAINT_DEFINITIONS.set(name, definition)
+for (const [name, definition] of [
+  ["auth_identity_links.auth_identity_links_pkey", "UNIQUE btree (id)"],
+  ["auth_registration_deliveries.auth_registration_deliveries_pkey", "UNIQUE btree (id)"],
+  ["auth_registration_emails.auth_registration_emails_pkey", "UNIQUE btree (id)"],
+  ["auth_registration_emails.auth_registration_emails_email_unique", "UNIQUE btree (email)"],
+  ["auth_registration_grants.auth_registration_grants_pkey", "UNIQUE btree (id)"],
+  ["auth_registration_grants.auth_registration_grants_token_hash_unique", "UNIQUE btree (token_hash)"],
+  ["communities.communities_pkey", "UNIQUE btree (id)"],
+  ["community_memberships.community_memberships_user_id_community_id_pk", "UNIQUE btree (user_id, community_id)"],
+  ["community_memberships.community_memberships_application_id_unique", "UNIQUE btree (application_id)"],
+  ["community_reviewers.community_reviewers_community_id_user_id_pk", "UNIQUE btree (community_id, user_id)"],
+  ["auth_identity_links.auth_identity_links_subject_unique", "UNIQUE btree (provider, external_user_id)"],
+  ["auth_identity_links.auth_identity_links_user_provider_unique", "UNIQUE btree (user_id, provider)"],
+  ["auth_registration_deliveries.auth_registration_deliveries_version_unique", "UNIQUE btree (registration_email_id, code_version)"],
+  ["auth_registration_grants.auth_registration_grants_expiry_idx", "btree (expires_at)"],
+  ["join_applications.join_applications_user_community_unique", "UNIQUE btree (user_id, community_id) WHERE (user_id IS NOT NULL)"],
+  ["join_applications.join_applications_identity_unique", "UNIQUE btree (id, user_id, community_id)"],
+  ["join_applications.join_applications_community_list_idx", "btree (community_id, status, created_at, id)"],
+  ["join_applications.join_applications_owner_idx", "btree (user_id, community_id)"]
+] as const) APPLICATION_INDEX_SIGNATURES.set(name, definition)
+APPLICATION_INDEX_SIGNATURES.delete('join_applications.join_applications_open_email_unique')
 
 export function indexSignature(definition: string): string {
   const match = /^CREATE (UNIQUE )?INDEX \S+ ON \S+ USING (.+)$/.exec(definition)

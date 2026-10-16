@@ -15,6 +15,7 @@
     "typecheck": "node ../../scripts/api/generate.mjs check && tsc --noEmit -p tsconfig.json",
     "db:migrate": "node ../../scripts/runtime/server.mjs db:migrate",
     "db:reset": "node ../../scripts/runtime/server.mjs db:reset",
+    "db:registration-inventory": "node ../../scripts/runtime/server.mjs db:registration-inventory",
     "db:generate": "drizzle-kit generate",
     "sso:create": "node ../../scripts/runtime/server.mjs sso:create",
     "sso:inspect": "node ../../scripts/runtime/server.mjs sso:inspect",

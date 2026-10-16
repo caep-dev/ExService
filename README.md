@@ -28,7 +28,9 @@ Website 使用独立 PostgreSQL `exre`；Hydra 提供 OIDC 协议并使用独立
 - [ ] 执行 `pnpm service:start`。如需接入应用，在 `IDENTITY_CLIENTS_JSON` 配置明确的客户端，再执行 `pnpm infra clients`。默认 `[]` 无需登记，不创建默认应用。
 - [ ] 执行 `pnpm dev`。
 
-普通启动只检查就绪状态，不创建库、迁移、重置或登记 client。已有环境切换旧 URL 配置时，先核对原连接目标和凭据，再显式执行 `pnpm infra convert`；它备份配置并保留原值，不迁移数据。更换持久卷、PostgreSQL 版本、issuer 或已有凭据需要独立维护，不属于启动检查单。
+公开注册不要求社区审核。邮箱注册需要邮件适配器，缺失时明确返回不可用；仅本地开发可显式配置 `SERVER_REGISTRATION_MAIL_SIMULATOR=true`，从专用终端通道取得测试验证码，该通道不代表真实投递。Cfx 路径遵守已有 Cfx 配置；两种注册方式均须设置密码。Google、QQ 暂未开放。
+
+普通启动只检查就绪状态，不创建库、迁移、重置、登记 client 或授予管理员。已有环境切换旧 URL 配置时，先核对原连接目标和凭据，再显式执行 `pnpm infra convert`；它备份配置并保留原值，不迁移数据。更换持久卷、PostgreSQL 版本、issuer 或已有凭据需要独立维护，不属于启动检查单。
 
 旧 Outline 环境的资源清理是独立维护：`node scripts/runtime/retire-outline.mjs --plan` 缺省只读，需要原配置及归属证明。清理前保留原配置和资源记录，不能删除证明或重置 PostgreSQL/Hydra 来绕过核验。维护边界见 `.ai/architectures/runtime/runtime-boundaries.md`。
 
@@ -40,6 +42,7 @@ Website 使用独立 PostgreSQL `exre`；Hydra 提供 OIDC 协议并使用独立
 | 查看状态/日志 | `pnpm service:status` / `pnpm service:logs [postgres\|hydra]` |
 | 开发监听 | `pnpm dev` |
 | Website 显式迁移 | `pnpm db:migrate` |
+| 注册切换前只读历史盘点 | `pnpm db:registration-inventory` |
 | Hydra 显式迁移 | `pnpm infra migrate` |
 | 显式登记身份客户端 | `pnpm infra clients` |
 | 自动测试/监听测试 | `pnpm test` / `pnpm test:watch` |

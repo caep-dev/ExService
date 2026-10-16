@@ -15,8 +15,8 @@ export type BusinessPluginStage = 'modules' | 'domains'
 export const businessPluginNamePattern = /^business-[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 export const businessDirectoryPattern = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 const serviceFields: readonly (keyof BusinessServices)[] = [
-  'authServices', 'profileServices', 'joinServices', 'invitationServices',
-  'oidcServices', 'storageServices', 'notifications', 'clickupServices', 'supportServices',
+  'authServices', 'profileServices', 'joinServices', 'identityLinkServices', 'registrationServices', 'communityServices',
+  'oidcServices', 'storageServices', 'notifications', 'clickupServices', 'supportServices', 'cfxServices', 'externalAccountServices',
 ]
 interface ErrorContext {
   stage?: BusinessPluginStage

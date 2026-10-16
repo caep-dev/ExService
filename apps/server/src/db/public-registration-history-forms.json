@@ -1,0 +1,291 @@
+{
+  "oneOf": [
+    {
+      "$ref": "#/definitions/JoinNewForm"
+    },
+    {
+      "$ref": "#/definitions/JoinExperiencedForm"
+    }
+  ],
+  "definitions": {
+    "JoinNewForm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applicationType",
+        "birthDate",
+        "applicantCategory",
+        "department",
+        "freeTime",
+        "discoveryChannels",
+        "answers",
+        "commitments"
+      ],
+      "properties": {
+        "applicationType": {
+          "type": "string",
+          "const": "new"
+        },
+        "birthDate": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Valid Gregorian YYYY-MM-DD date no later than server UTC today; never a timestamp."
+        },
+        "applicantCategory": {
+          "type": "string",
+          "enum": [
+            "100",
+            "101",
+            "102a",
+            "102b"
+          ]
+        },
+        "department": {
+          "type": "string",
+          "enum": [
+            "leo",
+            "ems"
+          ]
+        },
+        "freeTime": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Selected option or actual free text; trim before Unicode code point counting."
+        },
+        "discoveryChannels": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "bilibili",
+              "douyin",
+              "friends",
+              "other"
+            ]
+          }
+        },
+        "answers": {
+          "$ref": "#/definitions/JoinNewAnswers"
+        },
+        "commitments": {
+          "$ref": "#/definitions/JoinNewCommitments"
+        }
+      },
+      "description": "Answer and freeTime strings are trimmed then counted as Unicode code points. The server independently checks calendar and text semantics."
+    },
+    "JoinNewAnswers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fiveMExperience",
+        "emergencyRoleplayKnowledge",
+        "emergencyProceduresKnowledge",
+        "rpUnderstanding",
+        "frpUnderstanding"
+      ],
+      "properties": {
+        "fiveMExperience": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "emergencyRoleplayKnowledge": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "emergencyProceduresKnowledge": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "rpUnderstanding": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "frpUnderstanding": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      }
+    },
+    "JoinNewCommitments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "informationAccurate",
+        "obeyCommunityRules",
+        "acceptAcademyAttendanceConsequences"
+      ],
+      "properties": {
+        "informationAccurate": {
+          "type": "boolean",
+          "const": true
+        },
+        "obeyCommunityRules": {
+          "type": "boolean",
+          "const": true
+        },
+        "acceptAcademyAttendanceConsequences": {
+          "type": "boolean",
+          "const": true
+        }
+      }
+    },
+    "JoinExperiencedForm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applicationType",
+        "birthDate",
+        "applicantCategory",
+        "department",
+        "freeTime",
+        "discoveryChannels",
+        "answers",
+        "commitments"
+      ],
+      "properties": {
+        "applicationType": {
+          "type": "string",
+          "const": "experienced"
+        },
+        "birthDate": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Valid Gregorian YYYY-MM-DD date no later than server UTC today; never a timestamp."
+        },
+        "applicantCategory": {
+          "type": "string",
+          "enum": [
+            "100",
+            "101",
+            "102a",
+            "102b"
+          ]
+        },
+        "department": {
+          "type": "string",
+          "enum": [
+            "leo",
+            "ems"
+          ]
+        },
+        "freeTime": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "description": "Selected option or actual free text; trim before Unicode code point counting."
+        },
+        "discoveryChannels": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "bilibili",
+              "douyin",
+              "friends",
+              "other"
+            ]
+          }
+        },
+        "answers": {
+          "$ref": "#/definitions/JoinExperiencedAnswers"
+        },
+        "commitments": {
+          "$ref": "#/definitions/JoinExperiencedCommitments"
+        }
+      },
+      "description": "Answer and freeTime strings are trimmed then counted as Unicode code points. The server independently checks calendar and text semantics."
+    },
+    "JoinExperiencedAnswers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previousServer",
+        "leaveReason",
+        "previousDepartment",
+        "lawEnforcementExperience",
+        "highestRank",
+        "punishmentHistory",
+        "deescalationEssay",
+        "discretionEssay",
+        "transferReason"
+      ],
+      "properties": {
+        "previousServer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "leaveReason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "previousDepartment": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "lawEnforcementExperience": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "highestRank": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "punishmentHistory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "deescalationEssay": {
+          "type": "string",
+          "minLength": 150,
+          "maxLength": 4000
+        },
+        "discretionEssay": {
+          "type": "string",
+          "minLength": 150,
+          "maxLength": 4000
+        },
+        "transferReason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      }
+    },
+    "JoinExperiencedCommitments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "informationAccurate"
+      ],
+      "properties": {
+        "informationAccurate": {
+          "type": "boolean",
+          "const": true
+        },
+        "obeyCommunityRules": {
+          "type": "boolean",
+          "const": true,
+          "description": "Present on applications submitted by the current form; optional for previously stored version 1 forms."
+        }
+      }
+    }
+  }
+}

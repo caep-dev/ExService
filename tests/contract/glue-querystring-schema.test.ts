@@ -35,7 +35,7 @@ describe('glue route querystring schema', () => {
   it('hands the route an inlined querystring schema, so $ref scalars are coerced too', async () => {
     const fixture = await createTestAuth()
     fixtures.push(fixture)
-    const app = createApp({ joinServices: fixture.joinServices, invitationServices: fixture.invitationServices,
+    const app = createApp({ ...fixture,
       authServices: fixture.authServices, profileServices: fixture.profileServices,
       storageServices: fixture.storageServices, notifications: fixture.notifications, clickupServices: fixture.clickupServices, supportServices: fixture.supportServices })
     apps.push(app)

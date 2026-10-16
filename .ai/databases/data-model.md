@@ -2,13 +2,32 @@
 
 本文件记录表的业务职责、关系和必须保留的数据规则。它是修改模型前的设计入口，不代替可执行结构：PostgreSQL 结构以 `apps/server/src/db/schema.ts` 和 `apps/server/drizzle/` 为准；HTTP 字段与行为以 `api/openapi.yaml` 为准。
 
-_最后更新：2026-10-15_
+_最后更新：2026-10-16_
 
-## 适用范围
+公开注册及社区申请约束集中于 `.ai/databases/decisions/08-account-identity-and-community-membership.md`，业务选择见 `.ai/decisions/auth/01-public-registration-and-community-access.md`。当前 schema 与 0006 migration 已定义新模型；已有数据库须显式迁移，不能用启动或 reset 代替升级。退役的邀请约束在下文标明，其他现役模型按各节说明。
+
+## 公开注册与社区模型
+
+| 表 | 职责和数据规则 |
+| --- | --- |
+| `auth_users` | 永久 UUID、唯一邮箱和必填密码；保留所有现有账号、头像引用和会话。 |
+| `auth_identity_links` | 当前 Cfx 关联；provider 与外部 ID、账户与 provider 分别唯一。解绑删除当前行，申请快照不引用此可删除行。 |
+| `auth_registration_emails` | 邮箱验证码 HMAC、浏览器摘要、期限、冷却及失败窗口；三个验证码材料字段同时存在或同时为空。 |
+| `auth_registration_deliveries` | 邮箱记录与版本唯一的投递状态，不保存验证码、正文或原始错误。 |
+| `auth_registration_grants` | token 摘要与浏览器绑定的短期注册授权；kind 与身份快照匹配，processing 不恢复 active，completed 同时拥有账户和完成时间。 |
+| `communities` | 稳定 lowercase kebab-case 社区 ID、展示名、Cfx 要求及非负配置版本；迁移登记 rifling-911。 |
+| `community_reviewers` | 社区与账户的明确审核授权，记录授予人及时间；平台 admin 不自动获得审核权限。 |
+| `join_applications` | 新申请归属账户 UUID 与社区，全部状态共同占用一次机会；邮箱、名字、QQ 是提交快照。新决定必须有真实审核人，pending 无审核信息。 |
+| `community_memberships` | 账户与社区的成员资格，申请唯一；复合外键匹配同一申请、账户与社区，服务仅允许 approved 申请产生资格。 |
+| 原表单、附件、邮箱登记、邀请及投递表 | 保留原行和字节；旧申请全部只读，只有 completed 邀请的可信账户关系可回填，成员时间取 completedAt。未归属历史不占用新 UUID 机会，不按邮箱认领。 |
+
+升级在同一事务验证邀请映射、审批时间、版本化表单以及附件序号、长度和 SHA-256。冲突阻止新增迁移，不选取最近记录掩盖重复。所有邀请的授权摘要和期限清空，未完成邀请终结为 expired；completed 关系和投递事实保留，不重发通知。独立盘点只输出分类数量和安全冲突码，不能替代迁移事务内复查。
+
+## 历史邀请模型的适用范围
 
 邀请生命周期依据 `.notes/archive/join-registration/rfcs/join-registration-rfc.md`；完整申请与一次申请规则依据 `.notes/archive/join-registration/rfcs/join-application-pages-rfc.md`。PostgreSQL 从空库建立当前有效模型，不导入旧 SQLite 记录；版本 0 历史简版的读取兼容规则仍保留在应用行为中。
 
-下文“身份与会话集成模型”记录已写入 Website schema 和 migration 的数据职责；实际物理结构以 `apps/server/src/db/schema.ts` 和 `apps/server/drizzle/` 为准。跨服务身份控制流见 `.ai/architectures/identity/integration-boundaries.md`。
+下文“身份与会话集成模型”记录已写入 Website schema 和 migration 的数据职责；实际物理结构以 `apps/server/src/db/schema.ts` 和 `apps/server/drizzle/` 为准。以下邀请关系图与旧申请规则只解释保留的历史记录，不授权新的邀请或匿名申请写入。跨服务身份控制流见 `.ai/architectures/identity/integration-boundaries.md`。
 
 ```mermaid
 erDiagram
@@ -28,14 +47,16 @@ erDiagram
 
 `join_email_controls` 按规范化邮箱保存冷却和错误窗口，不与账号、申请建立外键。申请邮箱也不是账号外键：申请、同意和验证码验证均不创建正式账号。
 
-## 表的职责与关键规则
+## 历史邀请表与基础表的原有规则
+
+下表解释旧邀请数据及迁移边界。以 `join_` 开头的旧提交、审核和建号规则均已退役；`auth_users`、`auth_sessions`、`auth_sso_requests` 与身份组的基础职责继续有效，新社区关系以上文模型为准。
 
 | PostgreSQL 表 | 职责 | 关键标识与约束 |
 | --- | --- | --- |
 | `auth_users` | 保存正式本站账号和基础资料。 | 账号 ID 稳定，邮箱唯一；名字、QQ 和 FiveM ID 可重复，QQ、FiveM ID 和头像引用可为空。只保存密码哈希。FiveM ID 是未经验证的声明，不参与认证或授权。头像引用由服务端生成，已引用对象只属于一个用户，图片字节不进入数据库。 |
-| `join_applications` | 保存邮箱、申请名字、QQ、表单版本标记和审核事实，不保存密码。 | 状态为 pending、approved、rejected；同邮箱跨类别及所有状态只能提交一次，旧重复历史保留；重复提交不能覆盖原资料。同意、拒绝只从 pending 转换，相同决定幂等，相反决定冲突。本期审核人固定为空，预留账号关系不代表已实现授权。版本标记区分真实旧记录与新资料缺失，不能以缺少表单行推断为旧记录。 |
-| `join_application_email_registry` | 持续登记已提交过申请的规范化邮箱，并关联该邮箱最近历史申请。 | 每邮箱一行，关联必须属于该邮箱；最近按提交时间降序、稳定 ID 降序确定。拒绝、邀请到期或注册完成都不释放登记，申请人不可修改。旧重复记录不删除，新增申请由登记唯一约束和受控事务阻止。 |
-| `join_application_forms` | 保存完整申请的类别、版本及结构化回答与承诺。 | 每申请最多一行；所有新申请必须同时具有版本 1 标记和版本 1 表单，类别为全新或经验且与封闭 JSON 中类别一致。调转申请的新界面要求确认遵守社区规定；既有版本 1 调转记录可缺少这项承诺，读取时仍按 Contract 接受。保存及读取按对应版本 Contract 验证；旧三字段记录版本 0、没有表单，不补造回答或承诺。缺失、损坏或错配的新表单属于数据错误，不能降级为旧记录。 |
+| `join_applications` | 保存邮箱、申请名字、QQ、表单版本标记和审核事实，不保存密码。 | 状态为 pending、approved、rejected；同邮箱跨类别及所有状态只能提交一次，旧重复历史保留；重复提交不能覆盖原资料。同意、拒绝只从 pending 转换，相同决定幂等，相反决定冲突。旧流程审核人固定为空；当前社区审核按明确授权执行。版本标记区分真实旧记录与新资料缺失，不能以缺少表单行推断为旧记录。 |
+| `join_application_email_registry` | 持续登记已提交过申请的规范化邮箱，并关联该邮箱最近历史申请。 | 每邮箱一行，关联必须属于该邮箱；最近按提交时间降序、稳定 ID 降序确定。拒绝、邀请到期或注册完成都不释放登记，申请人不可修改。旧重复记录不删除；旧流程的邮箱登记不限制新模型按账户 UUID 与社区去重。 |
+| `join_application_forms` | 保存完整申请的类别、版本及结构化回答与承诺。 | 每申请最多一行；旧流程完整申请必须同时具有版本 1 标记和版本 1 表单，类别为全新或经验且与封闭 JSON 中类别一致。调转申请的新界面要求确认遵守社区规定；既有版本 1 调转记录可缺少这项承诺，读取时仍按 Contract 接受。保存及读取按对应版本 Contract 验证；旧三字段记录版本 0、没有表单，不补造回答或承诺。缺失、损坏或错配的新表单属于数据错误，不能降级为旧记录。 |
 | `join_application_attachments` | 保存与具体申请关联的可选证明文件元数据和 `bytea` 字节。 | 仅经验申请可有 0–5 个附件，每个 1 字节至 10 MiB，顺序 0–4 且申请内唯一；真实字节长度与摘要一致。所有关联外键限制删除历史，列表不读取附件字节；下载必须核对申请归属，不提供公开路径或内联预览。 |
 | `join_invitations` | 保存获批申请的验证资格、当前验证码、短期完善凭证和完成账号。 | 每条邀请关联一个申请，同申请最多一条 active 邀请。资格有效 7 天，码最长 10 分钟，凭证最长 30 分钟，均不能超过邀请截止时间。码只存绑定邀请及版本的 HMAC，凭证只存摘要。有效性按服务端时间复核，不只看持久化状态。 |
 | `join_email_controls` | 按邮箱维护 60 秒发送冷却和 10 分钟错误窗口。 | 邮箱是主键；累计 5 次错误锁定至窗口结束，重发和邀请更新均不重置。未知邮箱也维护短期错误窗口。投递失败不撤销冷却。 |
@@ -78,7 +99,9 @@ binding 创建使用同一会话锁并复核有效性。会话到期清理先为
 
 维护回填要求精确 attempt 与远端对象归属，附件须以下载文件摘要证明内容一致；明确未写入需有限的提供方证据。过期 receiving 仅经显式维护清理。普通启动、读取与停止不删除反馈记录；开发 reset 仍遵循显式目标与确认流程。备份包含正文和失败附件，不能纳入版本控制。
 
-## 注册与投递边界
+## 历史注册与投递边界（已退役）
+
+以下只描述旧邀请流程的历史写入与查询语义；现行公开注册与社区审核使用上文新模型，不重启旧邀请入口。
 
 完整申请、邮箱登记、表单和全部附件在一次短写事务中保存，任一步失败全部回滚，不留下半份资料或无效邮箱占用；邮箱竞争必须由数据库唯一约束裁决。已存在任意申请历史优先于正式账号冲突；申请提交不发邮件、不清理邀请、不创建账号。资料与承诺提交后不能由申请人修改。
 
@@ -92,9 +115,9 @@ binding 创建使用同一会话锁并复核有效性。会话到期清理先为
 
 资格检查只读一致快照，不发码、不更新冷却或失败窗口、不清理到期状态、不返回申请资料或凭证。码过期、消费或投递失败不撤销尚未到期的邀请资格，用户仍可进入重发步骤；验证和完善必须独立复查资格。
 
-审批事务先提交同意结果、邀请和投递记录，再在事务外调用适配器；投递失败不回滚审批。当前公开临时审核、审核人为空，不具备公网生产权限方案。
+审批事务先提交同意结果、邀请和投递记录，再在事务外调用适配器；投递失败不回滚审批。旧流程的公开临时审核曾不记录审核人；现行社区审核要求对应社区的明确授权。
 
-PostgreSQL 基线从空库一次创建当前有效表及 `admin` 社区组，不回放 SQLite migration，也不导入旧注册材料。迁移与重置的操作边界见 `.ai/databases/knowledge/database-lifecycle-traps.md` 和 `.ai/databases/decisions/03-database-changes-only-by-explicit-command.md`。
+PostgreSQL 从空库按现存 migration 顺序建立结构并创建 `admin` 社区组；0006 引入公开注册与社区关系，不回放 SQLite migration，也不导入旧注册材料。迁移与重置的操作边界见 `.ai/databases/knowledge/database-lifecycle-traps.md` 和 `.ai/databases/decisions/03-database-changes-only-by-explicit-command.md`。
 
 ## 持久通知模型
 
@@ -134,7 +157,7 @@ erDiagram
 
 头像字节在 `apps/server/data/avatars/`，数据库只保存引用；当前单实例拓扑使用本机文件。本人资料不得泄露给匿名调用方，公开图片不包含邮箱，清除或替换后旧引用不可继续公开读取。先写完新文件、再提交引用、最后清理旧文件；失败可留下待显式核对的孤立文件，不能留下指向未写完文件的引用。多实例共享存储留待后续设计。
 
-社区身份组不映射游戏角色或 FiveM 权限。普通身份由正式账号存在隐含，不写成员关系；未登录者不因此取得普通身份。admin 只由受信任流程显式授予，注册不授予。PostgreSQL 空库基线只创建 `admin` 组，不导入旧 SQLite 账号或成员关系。外键及组合唯一约束防止孤立与重复关系。当前没有管理员初始化、组管理或权限判断；admin 记录是后续授权规则依据。理由见 `.ai/databases/decisions/06-implicit-ordinary-explicit-admin-membership.md`。
+社区身份组不映射游戏角色或 FiveM 权限。普通身份由正式账号存在隐含，不写成员关系；未登录者不因此取得普通身份。admin 只由受信任流程显式授予，注册不授予。PostgreSQL 空库基线只创建 `admin` 组，不导入旧 SQLite 账号或成员关系。外键及组合唯一约束防止孤立与重复关系。社区配置管理与审核授权由服务端分别核验，admin 不隐含社区审核资格。理由见 `.ai/databases/decisions/06-implicit-ordinary-explicit-admin-membership.md`。
 
 ## 修改模型时
 

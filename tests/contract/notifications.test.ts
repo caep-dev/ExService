@@ -77,7 +77,7 @@ let otherAuthorization: string
 beforeEach(async () => {
   fixture = await createTestAuth()
   fixtures.push(fixture)
-  app = createApp({ joinServices: fixture.joinServices, invitationServices: fixture.invitationServices,
+  app = createApp({ ...fixture,
     authServices: fixture.authServices, profileServices: fixture.profileServices,
     storageServices: fixture.storageServices, notifications: fixture.notifications, clickupServices: fixture.clickupServices, supportServices: fixture.supportServices })
   await app.ready()

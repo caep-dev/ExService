@@ -1,0 +1,169 @@
+IdentityProvider:
+  type: string
+  enum:
+    - cfx
+    - google
+    - qq
+IdentityLink:
+  type: object
+  additionalProperties: false
+  required:
+    - id
+    - provider
+    - externalUserId
+    - externalUsername
+    - providerEmail
+    - linkedAt
+  properties:
+    id:
+      $ref: ../openapi.yaml#/components/schemas/Uuid
+    provider:
+      type: string
+      const: cfx
+    externalUserId:
+      type: string
+      pattern: ^[1-9][0-9]{0,15}$
+      maxLength: 16
+    externalUsername:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[^\u0000-\u001F\u007F]+$
+    providerEmail:
+      $ref: ../openapi.yaml#/components/schemas/Email
+    linkedAt:
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
+IdentityLinksResponse:
+  type: object
+  additionalProperties: false
+  required:
+    - providers
+  properties:
+    providers:
+      type: array
+      minItems: 3
+      maxItems: 3
+      items:
+        oneOf:
+          - type: object
+            additionalProperties: false
+            required:
+              - provider
+              - available
+              - link
+            properties:
+              provider:
+                type: string
+                const: cfx
+              available:
+                type: boolean
+              link:
+                anyOf:
+                  - $ref: "#/IdentityLink"
+                  - type: "null"
+          - type: object
+            additionalProperties: false
+            required:
+              - provider
+              - available
+              - link
+            properties:
+              provider:
+                type: string
+                const: google
+              available:
+                type: boolean
+                const: false
+              link:
+                type: "null"
+          - type: object
+            additionalProperties: false
+            required:
+              - provider
+              - available
+              - link
+            properties:
+              provider:
+                type: string
+                const: qq
+              available:
+                type: boolean
+                const: false
+              link:
+                type: "null"
+      description: Exactly one entry for each provider, in cfx, google, qq order. Order is enforced by the raw handler and
+        HTTP response tests. Google and QQ are disabled and unlinked.
+      not:
+        anyOf:
+          - not:
+              contains:
+                type: object
+                additionalProperties: false
+                required:
+                  - provider
+                  - available
+                  - link
+                properties:
+                  provider:
+                    type: string
+                    const: cfx
+                  available:
+                    type: boolean
+                  link:
+                    anyOf:
+                      - $ref: "#/IdentityLink"
+                      - type: "null"
+          - not:
+              contains:
+                type: object
+                additionalProperties: false
+                required:
+                  - provider
+                  - available
+                  - link
+                properties:
+                  provider:
+                    type: string
+                    const: google
+                  available:
+                    type: boolean
+                    const: false
+                  link:
+                    type: "null"
+          - not:
+              contains:
+                type: object
+                additionalProperties: false
+                required:
+                  - provider
+                  - available
+                  - link
+                properties:
+                  provider:
+                    type: string
+                    const: qq
+                  available:
+                    type: boolean
+                    const: false
+                  link:
+                    type: "null"
+LinkMyCfxIdentityRequest:
+  type: object
+  additionalProperties: false
+  required:
+    - attemptId
+    - identityTicket
+  properties:
+    attemptId:
+      $ref: ../openapi.yaml#/components/schemas/OpaqueIdentifier
+    identityTicket:
+      $ref: ../openapi.yaml#/components/schemas/OpaqueIdentifier
+UnlinkIdentityResult:
+  type: object
+  additionalProperties: false
+  required:
+    - status
+  properties:
+    status:
+      type: string
+      const: unlinked

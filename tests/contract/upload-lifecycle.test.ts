@@ -1,13 +1,21 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import Ajv from 'ajv'
 import { readContract } from '@tests/helpers/contract'
-import type { FastifyReply, FastifyRequest, RouteOptions } from 'fastify'
+import type {
+  FastifyReply,
+  FastifyRequest,
+  RouteOptions,
+} from '../../apps/server/node_modules/fastify'
 import { createApp, serviceHandlers } from '@workspace/server'
 import { AuthError, type AuthErrorCode } from '@server/src/modules/auth/errors'
 import { StorageError, type StorageErrorCode } from '@server/src/modules/storage/errors'
-import { createTestAuth, newJoinApplication, type TestAuth } from '@tests/helpers/auth'
+import { joinActor, createTestAuth, newJoinApplication, type TestAuth } from '@tests/helpers/auth'
 import { joinMultipart, multipartBody, type TestPart } from '@tests/helpers/multipart'
-import { createAppWithStorage, fileStorageFixture, type StorageTestFixture } from '@tests/helpers/storage'
+import {
+  createAppWithStorage,
+  fileStorageFixture,
+  type StorageTestFixture,
+} from '@tests/helpers/storage'
 
 /**
  * 共用 multipart 上传生命周期的 Contract 层验收。
@@ -19,9 +27,14 @@ import { createAppWithStorage, fileStorageFixture, type StorageTestFixture } fro
  */
 
 const contract = readContract(new URL('../../api/generated/openapi.json', import.meta.url))
-const definitions = JSON.parse(JSON.stringify(contract.components.schemas).replaceAll('#/components/schemas/', '#/definitions/'))
+const definitions = JSON.parse(
+  JSON.stringify(contract.components.schemas).replaceAll('#/components/schemas/', '#/definitions/'),
+)
 function validate(name: string, value: unknown) {
-  const check = new Ajv({ strict: false, allErrors: true, unknownFormats: 'ignore' }).compile({ ...definitions[name], definitions })
+  const check = new Ajv({
+    strict: false,
+    allErrors: true,
+  }).compile({ ...definitions[name], definitions })
   expect(check(value), JSON.stringify(check.errors)).toBe(true)
 }
 
@@ -29,8 +42,8 @@ const fixtures: TestAuth[] = []
 const storages: StorageTestFixture[] = []
 const apps: Array<ReturnType<typeof createApp>> = []
 afterEach(async () => {
-  await Promise.all(apps.splice(0).map(app => app.close()))
-  await Promise.all(fixtures.splice(0).map(fixture => fixture.close()))
+  await Promise.all(apps.splice(0).map((app) => app.close()))
+  await Promise.all(fixtures.splice(0).map((fixture) => fixture.close()))
   for (const storage of storages.splice(0)) storage.cleanup()
 })
 
@@ -41,11 +54,15 @@ afterEach(async () => {
  * （由 lifecycle controller 赋值）只能在 `app.ready()` 之后从同一对象读取。
  */
 function observeRoute(operationId: string) {
-  const observed: { statuses: string[]; route?: RouteOptions } = { statuses: [] }
+  const observed: { statuses: string[]; route?: RouteOptions } = {
+    statuses: [],
+  }
   return {
     observed,
     hook: (route: RouteOptions) => {
-      const schema = route.schema as { operationId?: string; response?: Record<string, unknown> } | undefined
+      const schema = route.schema as
+        | { operationId?: string; response?: Record<string, unknown> }
+        | undefined
       if (schema?.operationId !== operationId) return
       observed.statuses = Object.keys(schema.response ?? {}).sort()
       observed.route = route
@@ -54,9 +71,23 @@ function observeRoute(operationId: string) {
 }
 
 /** 提前终结适配只能输出数值状态码；Contract 的 `default` 不是可输出状态。 */
-const numericStatuses = (statuses: readonly string[]): string[] => statuses.filter(status => /^[1-9]\d{2}$/.test(status))
+const numericStatuses = (statuses: readonly string[]): string[] =>
+  statuses.filter((status) => /^[1-9]\d{2}$/.test(status))
 
-const JOIN_UPLOAD_STATUSES = ['202', '400', '408', '409', '413', '415', '429', '500', '503']
+const JOIN_UPLOAD_STATUSES = [
+  '202',
+  '400',
+  '401',
+  '403',
+  '404',
+  '408',
+  '409',
+  '413',
+  '415',
+  '429',
+  '500',
+  '503',
+]
 const STORAGE_UPLOAD_STATUSES = ['200', '400', '401', '408', '409', '413', '415', '500', '503']
 
 /**
@@ -70,14 +101,25 @@ describe('takeover status guard', () => {
   const declared = (statuses: readonly string[]): number[] => statuses.map(Number)
 
   it('covers every status the join upload lifecycle can emit', () => {
-    const codes: AuthErrorCode[] = ['JOIN_UPLOAD_TIMEOUT', 'JOIN_UPLOAD_TOO_LARGE', 'JOIN_UPLOAD_BUSY', 'JOIN_UNSUPPORTED_MEDIA_TYPE', 'BAD_REQUEST']
+    const codes: AuthErrorCode[] = [
+      'JOIN_UPLOAD_TIMEOUT',
+      'JOIN_UPLOAD_TOO_LARGE',
+      'JOIN_UPLOAD_BUSY',
+      'JOIN_UNSUPPORTED_MEDIA_TYPE',
+      'BAD_REQUEST',
+    ]
     for (const code of codes) {
       expect(declared(JOIN_UPLOAD_STATUSES), code).toContain(new AuthError(code).statusCode)
     }
   })
 
   it('covers every status the storage upload lifecycle can emit', () => {
-    const codes: StorageErrorCode[] = ['STORAGE_TIMEOUT', 'STORAGE_TOO_LARGE', 'STORAGE_INVALID_INPUT', 'STORAGE_UNSUPPORTED_MEDIA_TYPE']
+    const codes: StorageErrorCode[] = [
+      'STORAGE_TIMEOUT',
+      'STORAGE_TOO_LARGE',
+      'STORAGE_INVALID_INPUT',
+      'STORAGE_UNSUPPORTED_MEDIA_TYPE',
+    ]
     for (const code of codes) {
       expect(declared(STORAGE_UPLOAD_STATUSES), code).toContain(new StorageError(code).statusCode)
     }
@@ -129,11 +171,26 @@ describe('early takeover envelope', () => {
     await app.ready()
     // 容量与限流都发生在占位之前：没有 session，不存在提前接管。
     // `trustProxy` 默认为 false，转发头被忽略 —— 这里只是把回环 IP 的预算耗尽。
+    const actor = await joinActor(f)
     for (let i = 0; i < 60; i++) {
-      const query = await app.inject({ method: 'POST', url: '/api/join/applications/query', payload: { email: 'missing@example.com' } })
-      expect(query.statusCode).toBe(200)
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/communities/rifling-911/applications',
+        headers: {
+          ...actor.headers,
+          'content-type': 'multipart/form-data; boundary=bad',
+        },
+        payload: 'invalid',
+      })
+      expect(response.statusCode).toBe(400)
     }
-    const limited = await app.inject({ method: 'POST', url: '/api/join/applications', ...joinMultipart(newJoinApplication()) })
+    const multipart = joinMultipart(newJoinApplication())
+    const limited = await app.inject({
+      method: 'POST',
+      url: '/api/communities/rifling-911/applications',
+      ...multipart,
+      headers: { ...multipart.headers, ...actor.headers },
+    })
     expect(limited.statusCode).toBe(429)
     expect(limited.json().error.code).toBe('JOIN_RATE_LIMITED')
     expect(limited.headers['cache-control']).toBe('no-store')
@@ -143,17 +200,44 @@ describe('early takeover envelope', () => {
   })
 
   it('accepts the contract ErrorEnvelope and rejects extra, missing and mistyped fields', () => {
-    const envelope = { error: { code: 'STORAGE_TIMEOUT', message: 'x', requestId: 'y' } }
+    const envelope = {
+      error: { code: 'STORAGE_TIMEOUT', message: 'x', requestId: 'y' },
+    }
     expect(validateQuiet('ErrorEnvelope', envelope)).toBe(true)
-    expect(validateQuiet('ErrorEnvelope', { error: { code: 'STORAGE_TIMEOUT', message: 'x', requestId: 'y', extra: true } })).toBe(false)
-    expect(validateQuiet('ErrorEnvelope', { error: { code: 'STORAGE_TIMEOUT', message: 'x' } })).toBe(false)
-    expect(validateQuiet('ErrorEnvelope', { error: { code: 'STORAGE_TIMEOUT', message: 'x', requestId: 42 } })).toBe(false)
-    expect(validateQuiet('ErrorEnvelope', { error: { code: 'STORAGE_TIMEOUT', message: 'x', requestId: 'y' }, extra: 1 })).toBe(false)
+    expect(
+      validateQuiet('ErrorEnvelope', {
+        error: {
+          code: 'STORAGE_TIMEOUT',
+          message: 'x',
+          requestId: 'y',
+          extra: true,
+        },
+      }),
+    ).toBe(false)
+    expect(
+      validateQuiet('ErrorEnvelope', {
+        error: { code: 'STORAGE_TIMEOUT', message: 'x' },
+      }),
+    ).toBe(false)
+    expect(
+      validateQuiet('ErrorEnvelope', {
+        error: { code: 'STORAGE_TIMEOUT', message: 'x', requestId: 42 },
+      }),
+    ).toBe(false)
+    expect(
+      validateQuiet('ErrorEnvelope', {
+        error: { code: 'STORAGE_TIMEOUT', message: 'x', requestId: 'y' },
+        extra: 1,
+      }),
+    ).toBe(false)
   })
 })
 
 function validateQuiet(name: string, value: unknown): boolean {
-  const check = new Ajv({ strict: false, allErrors: true, unknownFormats: 'ignore' }).compile({ ...definitions[name], definitions })
+  const check = new Ajv({
+    strict: false,
+    allErrors: true,
+  }).compile({ ...definitions[name], definitions })
   return check(value) === true
 }
 
@@ -161,7 +245,12 @@ function textPart(name: string, value: string): TestPart {
   return { name, contentType: 'text/plain', bytes: Buffer.from(value, 'utf8') }
 }
 function dataPart(bytes: Uint8Array): TestPart {
-  return { name: 'data', filename: 'upload.bin', contentType: 'application/octet-stream', bytes: Buffer.from(bytes) }
+  return {
+    name: 'data',
+    filename: 'upload.bin',
+    contentType: 'application/octet-stream',
+    bytes: Buffer.from(bytes),
+  }
 }
 
 /**
@@ -177,9 +266,17 @@ function captureHandlerOutput(operationId: string) {
     hook: (route: RouteOptions) => {
       const schema = route.schema as { operationId?: string } | undefined
       if (schema?.operationId !== operationId) return
-      const handler = route.handler as (this: unknown, request: FastifyRequest, reply: FastifyReply) => unknown
+      const handler = route.handler as (
+        this: unknown,
+        request: FastifyRequest,
+        reply: FastifyReply,
+      ) => unknown
       // 保留 Fastify 传给 handler 的 `this`，不替换成 route 对象。
-      route.handler = async function capturedHandler(this: unknown, request: FastifyRequest, reply: FastifyReply) {
+      route.handler = async function capturedHandler(
+        this: unknown,
+        request: FastifyRequest,
+        reply: FastifyReply,
+      ) {
         calls++
         const result = await handler.call(this, request, reply)
         captured.push(result)
@@ -199,7 +296,14 @@ describe('raw upload handler output', () => {
     apps.push(app)
     await app.ready()
 
-    const accepted = await app.inject({ method: 'POST', url: '/api/join/applications', ...joinMultipart(newJoinApplication('raw-join@example.com')) })
+    const actor = await joinActor(f),
+      multipart = joinMultipart(newJoinApplication())
+    const accepted = await app.inject({
+      method: 'POST',
+      url: '/api/communities/rifling-911/applications',
+      ...multipart,
+      headers: { ...multipart.headers, ...actor.headers },
+    })
     expect(accepted.statusCode, accepted.body).toBe(202)
     expect(capture.calls()).toBe(1)
     const raw = capture.captured[0] as { status: string }
@@ -220,12 +324,28 @@ describe('raw upload handler output', () => {
     app.addHook('onRoute', capture.hook)
     apps.push(app)
     await app.ready()
-    await f.seedUser({ email: 'raw-storage@example.com', nickname: 'Raw', password: 'valid password' })
-    const login = await app.inject({ method: 'POST', url: '/api/auth/login', payload: { email: 'raw-storage@example.com', password: 'valid password' } })
+    await f.seedUser({
+      email: 'raw-storage@example.com',
+      nickname: 'Raw',
+      password: 'valid password',
+    })
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: 'raw-storage@example.com', password: 'valid password' },
+    })
     const token = (login.json() as { token: string }).token
 
-    const { payload, headers } = multipartBody([textPart('key', 'raw.bin'), dataPart(new Uint8Array([1, 2, 3]))])
-    const accepted = await app.inject({ method: 'POST', url: '/api/storage/uploads', headers: { ...headers, authorization: `Bearer ${token}` }, payload })
+    const { payload, headers } = multipartBody([
+      textPart('key', 'raw.bin'),
+      dataPart(new Uint8Array([1, 2, 3])),
+    ])
+    const accepted = await app.inject({
+      method: 'POST',
+      url: '/api/storage/uploads',
+      headers: { ...headers, authorization: `Bearer ${token}` },
+      payload,
+    })
     expect(accepted.statusCode, accepted.body).toBe(200)
     expect(capture.calls()).toBe(1)
     const raw = capture.captured[0] as { url: string }
@@ -239,7 +359,12 @@ describe('raw upload handler output', () => {
     expect(validateQuiet('JoinApplicationReceived', { status: 'received' })).toBe(true)
     expect(validateQuiet('JoinApplicationReceived', {})).toBe(false)
     expect(validateQuiet('JoinApplicationReceived', { status: 'accepted' })).toBe(false)
-    expect(validateQuiet('JoinApplicationReceived', { status: 'received', extra: 1 })).toBe(false)
+    expect(
+      validateQuiet('JoinApplicationReceived', {
+        status: 'received',
+        extra: 1,
+      }),
+    ).toBe(false)
     expect(validateQuiet('StorageUploadResult', { url: 'https://example.test/a' })).toBe(true)
     expect(validateQuiet('StorageUploadResult', {})).toBe(false)
     expect(validateQuiet('StorageUploadResult', { url: 1 })).toBe(false)
@@ -253,14 +378,33 @@ describe('raw upload handler output', () => {
     const app = createAppWithStorage(f, storage.storage)
     apps.push(app)
     await app.ready()
-    await f.seedUser({ email: 'forged-storage@example.com', nickname: 'Forged', password: 'valid password' })
-    const token = await f.authServices.login({ email: 'forged-storage@example.com', password: 'valid password' }).then(result => result.token)
+    await f.seedUser({
+      email: 'forged-storage@example.com',
+      nickname: 'Forged',
+      password: 'valid password',
+    })
+    const token = await f.authServices
+      .login({
+        email: 'forged-storage@example.com',
+        password: 'valid password',
+      })
+      .then((result) => result.token)
     const session = await f.authServices.authenticateToken(token)
-    const reply = { header: () => reply, code: () => reply } as unknown as FastifyReply
+    const reply = {
+      header: () => reply,
+      code: () => reply,
+    } as unknown as FastifyReply
     // 直接调用 handler：没有真实解析上下文，伪造的 data 占位标识必须被拒绝。
     // `storage.test.ts` 的 HTTP 用例只断言 >=400，这条把分类钉死为 STORAGE_INVALID_INPUT。
-    await expect(serviceHandlers.uploadStorageContent({
-      server: f, authSession: session, body: { key: 'a.bin', data: 'storage-content' },
-    } as unknown as FastifyRequest, reply)).rejects.toMatchObject({ code: 'STORAGE_INVALID_INPUT' })
+    await expect(
+      serviceHandlers.uploadStorageContent(
+        {
+          server: f,
+          authSession: session,
+          body: { key: 'a.bin', data: 'storage-content' },
+        } as unknown as Parameters<typeof serviceHandlers.uploadStorageContent>[0],
+        reply,
+      ),
+    ).rejects.toMatchObject({ code: 'STORAGE_INVALID_INPUT' })
   })
 })

@@ -46,13 +46,13 @@ describe('AuthForm', () => {
     expect(screen.queryByRole('button', { name: '返回修改资料' })).toBeNull()
   })
 
-  it('reserves disabled provider buttons and routes the join action through its callback', async () => {
+  it('reserves disabled providers and routes account registration through its callback', async () => {
     const user = userEvent.setup()
     const { props } = renderForm({})
-    expect((screen.getByRole('button', { name: 'Google 登录' }) as HTMLButtonElement).disabled).toBe(true)
-    expect((screen.getByRole('button', { name: 'QQ 登录' }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('button', { name: 'Google 暂未开放' }) as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByRole('button', { name: 'QQ 暂未开放' }) as HTMLButtonElement).disabled).toBe(true)
     await user.type(screen.getByLabelText('邮箱'), 'member@example.com')
-    await user.click(screen.getByRole('button', { name: '加入我们' }))
+    await user.click(screen.getByRole('button', { name: '注册账号' }))
     expect(props.onJoin).toHaveBeenCalledOnce()
     expect(props.onContinueLogin).not.toHaveBeenCalled()
   })

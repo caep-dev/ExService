@@ -77,9 +77,10 @@ export class ProfileService {
     return this.toSnapshot(row)
   }
 
-  async update(userId: string, input: ProfileUpdate) {
+  async update(userId: string, input: ProfileUpdate, assertSessionCurrent: (tx: SqlExecutor) => Promise<void>) {
     const result = await this.db.transaction(async tx => {
       const row = await this.readUser(userId, tx, true)
+      await assertSessionCurrent(tx)
       const assignments: string[] = []
       const values: Array<string | null> = []
       if (input.nickname !== undefined) {

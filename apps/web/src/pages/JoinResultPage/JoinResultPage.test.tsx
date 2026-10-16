@@ -1,89 +1,66 @@
-﻿// @vitest-environment jsdom
-import { afterEach, expect, it, vi } from 'vitest'
-import { act, cleanup, render, screen } from '@testing-library/react'
+// @vitest-environment jsdom
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { act, cleanup, render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
-import { JoinResultPage } from '@web/src/pages/JoinResultPage/index'
+import { JoinResultPage } from './index'
 import { ExAxiosError } from '@workspace/sdk/http/browser'
-const post = vi.hoisted(() => vi.fn())
-vi.mock('@web/src/api/client', () => ({ api: { POST: post } }))
-afterEach(() => { cleanup(); post.mockReset(); vi.restoreAllMocks() })
+import { writeToken, clearBrowserSession } from '@web/src/auth/storage'
+const get = vi.hoisted(() => vi.fn())
+vi.mock('@web/src/api/client', () => ({ api: { GET: get } }))
+vi.mock('@web/src/join/CommunityAuthentication', () => ({ CommunityAuthentication: () => <p>登录表单</p> }))
+beforeEach(() => writeToken(localStorage, 'owner'))
+afterEach(() => { cleanup(); clearBrowserSession(); get.mockReset(); vi.restoreAllMocks(); window.history.replaceState({}, '', '/') })
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done }); return { promise, resolve } }
 function setup() { render(<MemoryRouter><JoinResultPage /></MemoryRouter>); return userEvent.setup() }
-const states = [
-  ['not_found', 'apply', '未查到申请', '/join/rifling-911'], ['pending', 'wait', '待审核', null], ['approved', 'register', '已通过', '/register'],
-  ['rejected', 'contact_community', '已拒绝', null], ['invitation_expired', 'contact_community', '邀请到期', null], ['registered', 'login', '已完成注册', '/login'],
-] as const
-it.each(states)('renders %s and only its fixed next action', async (status, nextAction, title, href) => {
-  post.mockResolvedValue({ status, nextAction })
-  const user = setup()
-  expect(post).not.toHaveBeenCalled()
-  await user.type(screen.getByLabelText('申请邮箱'), 'Member@example.com')
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByRole('heading', { name: title })).toBeTruthy()
-  expect(post).toHaveBeenCalledExactlyOnceWith('/join/applications/query', { body: { email: 'member@example.com' }, alert: false })
-  if (href) expect(screen.getAllByRole('link').some(link => link.getAttribute('href') === href)).toBe(true)
-  expect(screen.queryByText('member@example.com')).toBeNull()
+function page(status: 'pending' | 'approved' | 'rejected' | null = 'pending', communityId = 'rifling-911') {
+  return { items: [{ communityId, application: status ? { id: 'a', status, createdAt: 1, reviewedAt: null } : null, membership: status === 'approved' ? { applicationId: 'a', joinedAt: 2 } : null, requiredProviders: [], missingProviders: [], requirementsMet: true, websiteReady: status === 'approved' }], total: 1, limit: 20, offset: 0 }
+}
+it.each([['pending', '待审核'], ['approved', '已通过'], ['rejected', '已拒绝'], [null, '尚未申请']] as const)('renders own %s without inviting registration or email lookup', async (status, label) => {
+  get.mockResolvedValue(page(status)); setup()
+  expect(await screen.findByText(label)).toBeTruthy()
+  expect(get).toHaveBeenCalledExactlyOnceWith('/auth/me/communities', expect.objectContaining({ headers: { Authorization: 'Bearer owner' }, params: { query: { limit: 20, offset: 0 } } }))
+  expect(screen.queryByLabelText('申请邮箱')).toBeNull()
+  expect(screen.queryByRole('link', { name: /注册/ })).toBeNull()
+  if (status) expect(screen.getByText(/所有审核状态均不能重新申请/)).toBeTruthy()
 })
-it('validates before requests and treats a missing record as a successful result', async () => {
-  const user = setup()
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByText('请输入有效的邮箱地址')).toBeTruthy()
-  expect(post).not.toHaveBeenCalled()
-  post.mockResolvedValue({ status: 'not_found', nextAction: 'apply' })
-  await user.type(screen.getByLabelText('申请邮箱'), 'a@example.com')
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByRole('heading', { name: '未查到申请' })).toBeTruthy()
-  expect(screen.queryByRole('alert')).toBeNull()
+it('requires a session before reading and clears old email/code parameters with an explanation', () => {
+  clearBrowserSession(); window.history.replaceState({}, '', '/join/result?email=old@example.com&code=secret&keep=1'); setup()
+  expect(get).not.toHaveBeenCalled(); expect(screen.getByText('登录表单')).toBeTruthy()
+  expect(screen.getByText(/旧邮箱查询参数已清除/)).toBeTruthy()
+  expect(window.location.search).toBe('?keep=1')
 })
-it('clears on edits during a pending request and rejects its late result after a newer query', async () => {
-  const first = deferred<{ status: string; nextAction: string }>()
-  post.mockReturnValueOnce(first.promise).mockResolvedValueOnce({ status: 'registered', nextAction: 'login' })
-  const user = setup(), input = screen.getByLabelText('申请邮箱')
-  await user.type(input, 'first@example.com')
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect((screen.getByRole('button', { name: '正在查询' }) as HTMLButtonElement).disabled).toBe(true)
-  await user.clear(input); await user.type(input, 'second@example.com')
-  expect(screen.queryByRole('heading', { name: '待审核' })).toBeNull()
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByRole('heading', { name: '已完成注册' })).toBeTruthy()
-  await act(async () => { first.resolve({ status: 'pending', nextAction: 'wait' }) })
-  expect(screen.queryByRole('heading', { name: '待审核' })).toBeNull()
-  expect(screen.getByRole('heading', { name: '已完成注册' })).toBeTruthy()
-  await user.type(input, 'x')
-  expect(screen.queryByRole('heading', { name: '已完成注册' })).toBeNull()
+it('clears old owner data and ignores a late response after switching accounts', async () => {
+  const old = deferred<ReturnType<typeof page>>()
+  get.mockReturnValueOnce(old.promise).mockResolvedValueOnce(page('approved', 'second'))
+  setup(); act(() => writeToken(localStorage, 'second-owner'))
+  expect(await screen.findByText('已通过')).toBeTruthy()
+  await act(async () => old.resolve(page('pending', 'private-first')))
+  expect(screen.queryByText('private-first')).toBeNull(); expect(screen.queryByText('待审核')).toBeNull()
+  act(() => clearBrowserSession()); expect(screen.queryByText('已通过')).toBeNull()
 })
-it('drops a response after unmount and starts a fresh page without automatic queries', async () => {
-  const first = deferred<{ status: string; nextAction: string }>()
-  post.mockReturnValueOnce(first.promise)
-  const user = setup()
-  await user.type(screen.getByLabelText('申请邮箱'), 'first@example.com')
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  cleanup(); setup()
-  await act(async () => { first.resolve({ status: 'pending', nextAction: 'wait' }) })
-  expect(screen.queryByRole('heading', { name: '待审核' })).toBeNull()
-  expect((screen.getByLabelText('申请邮箱') as HTMLInputElement).value).toBe('')
-  expect(post).toHaveBeenCalledTimes(1)
+it('discards an unmounted response and reloads current owner on a fresh mount', async () => {
+  const old = deferred<ReturnType<typeof page>>()
+  get.mockReturnValueOnce(old.promise).mockResolvedValueOnce(page('rejected'))
+  setup(); cleanup(); setup()
+  expect(await screen.findByText('已拒绝')).toBeTruthy()
+  await act(async () => old.resolve(page('pending')))
+  expect(screen.queryByText('待审核')).toBeNull(); expect(get).toHaveBeenCalledTimes(2)
 })
-it('reports rate limiting and network failures with an explicit retry', async () => {
-  post.mockRejectedValueOnce(new ExAxiosError('http', 'HTTP_ERROR', '请求失败', { status: 429 })).mockRejectedValueOnce(new Error('private error')).mockResolvedValueOnce({ status: 'pending', nextAction: 'wait' })
-  const user = setup()
-  await user.type(screen.getByLabelText('申请邮箱'), 'a@example.com')
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByText('查询过于频繁，请稍后再试')).toBeTruthy()
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByText('查询失败，请检查网络后重新查询')).toBeTruthy()
+it('reports rate limiting and private failures with an explicit retry', async () => {
+  get.mockRejectedValueOnce(new ExAxiosError('http', 'HTTP_ERROR', 'private', { status: 429 })).mockRejectedValueOnce(new Error('private error')).mockResolvedValueOnce(page())
+  const user = setup(); expect(await screen.findByText('查询过于频繁，请稍后再试')).toBeTruthy()
+  await user.click(screen.getByRole('button', { name: '刷新本人状态' })); expect(await screen.findByText('无法读取本人社区状态，请重试')).toBeTruthy()
   expect(screen.queryByText('private error')).toBeNull()
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByRole('heading', { name: '待审核' })).toBeTruthy()
+  await user.click(screen.getByRole('button', { name: '刷新本人状态' })); expect(await screen.findByText('待审核')).toBeTruthy()
 })
-it('rejects mismatched or unknown states instead of building an arbitrary action link', async () => {
-  post.mockResolvedValueOnce({ status: 'approved', nextAction: 'https://example.com' }).mockResolvedValueOnce({ status: 'unrecognized', nextAction: 'login' })
-  const user = setup()
-  await user.type(screen.getByLabelText('申请邮箱'), 'a@example.com')
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByText('查询失败，请检查网络后重新查询')).toBeTruthy()
-  expect(screen.queryByRole('heading', { name: '已通过' })).toBeNull()
-  await user.click(screen.getByRole('button', { name: '查询结果' }))
-  expect(await screen.findByText('查询失败，请检查网络后重新查询')).toBeTruthy()
+it('selects communities and paginates while clearing previous page data', async () => {
+  const next = deferred<ReturnType<typeof page>>()
+  get.mockResolvedValueOnce({ ...page(), total: 21, items: [...page().items, ...page('approved', 'another').items] }).mockReturnValueOnce(next.promise)
+  const user = setup(); await screen.findByText('待审核')
+  fireEvent.change(screen.getByLabelText('选择社区'), { target: { value: 'another' } }); expect(screen.getByText('已通过')).toBeTruthy()
+  await user.click(screen.getByRole('button', { name: '下一页' })); expect(screen.queryByText('已通过')).toBeNull()
+  expect(get).toHaveBeenLastCalledWith('/auth/me/communities', expect.objectContaining({ params: { query: { limit: 20, offset: 20 } } }))
+  await act(async () => next.resolve({ ...page('rejected', 'last'), offset: 20, total: 21 }))
+  expect(screen.getByText('已拒绝')).toBeTruthy()
 })

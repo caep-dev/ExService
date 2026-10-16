@@ -14,6 +14,7 @@ import { NotificationError } from './errors.js'
 export const NAVIGATION_TARGETS = {
   'account.settings': '/account/profile',
   'community.home': '/communities/rifling-911',
+  'community.application-result': '/join/result',
 } as const
 
 export type NavigationTargetKey = keyof typeof NAVIGATION_TARGETS
@@ -46,6 +47,7 @@ export type ResolvedAction = {
 const NAVIGATION_LABELS: Record<NavigationTargetKey, string> = {
   'account.settings': '前往账号设置',
   'community.home': '查看社区主页',
+  'community.application-result': '查看申请结果',
 }
 
 export const MAX_ACTIONS_PER_CONTENT = 4

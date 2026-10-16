@@ -1,16 +1,16 @@
-import { submitJoinApplication, queryJoinApplicationResult, downloadJoinApplicationAttachment, listJoinApplications, getJoinApplication, approveJoinApplication, rejectJoinApplication, resendJoinInvitation, checkInvitationEligibility, requestInvitationCode, verifyInvitationCode, completeInvitationRegistration } from './handlers.js'
-
-export const operations = {
+﻿import {
   submitJoinApplication,
-  queryJoinApplicationResult,
   downloadJoinApplicationAttachment,
   listJoinApplications,
   getJoinApplication,
   approveJoinApplication,
   rejectJoinApplication,
-  resendJoinInvitation,
-  checkInvitationEligibility,
-  requestInvitationCode,
-  verifyInvitationCode,
-  completeInvitationRegistration,
+} from './handlers.js'
+export const operations = {
+  submitJoinApplication,
+  downloadJoinApplicationAttachment,
+  listJoinApplications,
+  getJoinApplication,
+  approveJoinApplication,
+  rejectJoinApplication,
 } as const

@@ -51,11 +51,25 @@ export class AuthService {
         'SELECT * FROM auth_users WHERE id = $1 FOR NO KEY UPDATE', [user.id])).rows[0]
       if (!current || current.disabled_at !== null || current.email !== email ||
         current.password_hash !== user.password_hash) throw new AuthError('INVALID_CREDENTIALS')
-      const token = this.createOpaqueIdentifier(), now = this.now(), expiresAt = now + SESSION_LIFETIME_MS
-      await tx.query(`INSERT INTO auth_sessions (token_hash, user_id, created_at, expires_at, revoked_at)
-        VALUES ($1, $2, $3, $4, NULL)`, [digestOpaque(token), user.id, now, expiresAt])
-      return { token, expiresAt }
+      return this.createSessionInside(tx, user.id)
     })
+  }
+
+  async createAccountInside(tx: SqlExecutor, input: { email: string; nickname: string }, passwordHash: string) {
+    const id = randomUUID(), email = normalizeEmail(input.email)
+    await tx.query(`INSERT INTO auth_users (id, email, nickname, password_hash, created_at)
+      VALUES ($1, $2, $3, $4, $5)`, [id, email, input.nickname, passwordHash, this.now()])
+    return { id, email }
+  }
+
+  async createSessionInside(tx: SqlExecutor, userId: string) {
+    const user = (await tx.query<{ disabled_at: number | null }>(
+      'SELECT disabled_at FROM auth_users WHERE id = $1 FOR NO KEY UPDATE', [userId])).rows[0]
+    if (!user || user.disabled_at !== null) throw new AuthError('SESSION_INVALID')
+    const token = this.createOpaqueIdentifier(), now = this.now(), expiresAt = now + SESSION_LIFETIME_MS
+    await tx.query(`INSERT INTO auth_sessions (token_hash, user_id, created_at, expires_at, revoked_at)
+      VALUES ($1, $2, $3, $4, NULL)`, [digestOpaque(token), userId, now, expiresAt])
+    return { token, expiresAt }
   }
 
   async authenticateToken(token: string): Promise<SessionIdentity> {

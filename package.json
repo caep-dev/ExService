@@ -25,6 +25,7 @@
     "logs": "node scripts/runtime/entry.mjs logs",
     "db:migrate": "pnpm --filter @workspace/server db:migrate",
     "db:reset": "pnpm --filter @workspace/server db:reset",
+    "db:registration-inventory": "pnpm --filter @workspace/server db:registration-inventory",
     "api:bundle": "node scripts/api/generate.mjs bundle",
     "api:check": "node scripts/api/generate.mjs check"
   },

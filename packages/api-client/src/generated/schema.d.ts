@@ -4,6 +4,110 @@
  */
 
 export interface paths {
+    "/auth/cfx/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * createCfxAttempt
+         * @description Browser-bound Cfx verification; does not create a Website account or session.
+         *     Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+         *     Cookie is optional in the schema but ownership is mandatory except for creation.
+         *     Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+         *     user/email/upstream, timeout, capacity/rate and closed-service failures.
+         */
+        post: operations["createCfxAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/cfx/attempts/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * completeCfxManualAttempt
+         * @description Browser-bound Cfx verification; does not create a Website account or session.
+         *     Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+         *     Cookie is optional in the schema but ownership is mandatory except for creation.
+         *     Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+         *     user/email/upstream, timeout, capacity/rate and closed-service failures.
+         */
+        post: operations["completeCfxManualAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/cfx/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * receiveCfxCallback
+         * @description Browser-bound Cfx verification; does not create a Website account or session.
+         *     Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+         *     Cookie is optional in the schema but ownership is mandatory except for creation.
+         *     Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+         *     user/email/upstream, timeout, capacity/rate and closed-service failures.
+         */
+        get: operations["receiveCfxCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/cfx/attempts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * getCfxAttempt
+         * @description Browser-bound Cfx verification; does not create a Website account or session.
+         *     Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+         *     Cookie is optional in the schema but ownership is mandatory except for creation.
+         *     Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+         *     user/email/upstream, timeout, capacity/rate and closed-service failures.
+         */
+        get: operations["getCfxAttempt"];
+        put?: never;
+        post?: never;
+        /**
+         * cancelCfxAttempt
+         * @description Browser-bound Cfx verification; does not create a Website account or session.
+         *     Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+         *     Cookie is optional in the schema but ownership is mandatory except for creation.
+         *     Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+         *     user/email/upstream, timeout, capacity/rate and closed-service failures.
+         */
+        delete: operations["cancelCfxAttempt"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -35,219 +139,6 @@ export interface paths {
          * @description The Server returns a placeholder PNG during development and does not validate captcha submissions yet.
          */
         post: operations["createCaptchaChallenge"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/join/applications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Submit one complete join application
-         * @description Exactly one application JSON part; new players cannot attach proofs. Each proof carries its raw file bytes in a separate multipart part with the same proofs field name, without percent encoding. Proof parts retain their supplied media type; the server validates extension and byte signatures independently of that media type. One normalized email may apply only once across all histories and categories. Existing history returns 409 JOIN_APPLICATION_EXISTS before account-only EMAIL_IN_USE. Validation and atomic persistence complete before success. All responses use no-store.
-         */
-        post: operations["submitJoinApplication"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/join/applications/query": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Read the minimal join application result
-         * @description Read-only snapshot; six closed status/nextAction pairs, no email or personal information. Missing applications return 200 not_found, including account-only legacy users. A completed invitation with an existing user wins over newer history; otherwise use createdAt DESC, id DESC and latest invitation issuedAt DESC, id DESC. Expiry calculation never writes business state. All responses use no-store.
-         */
-        post: operations["queryJoinApplicationResult"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/join/applications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** listJoinApplications */
-        get: operations["listJoinApplications"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/join/applications/{applicationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** getJoinApplication */
-        get: operations["getJoinApplication"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/join/applications/{applicationId}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** approveJoinApplication */
-        post: operations["approveJoinApplication"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/join/applications/{applicationId}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** rejectJoinApplication */
-        post: operations["rejectJoinApplication"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/join/applications/{applicationId}/invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** resendJoinInvitation */
-        post: operations["resendJoinInvitation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/join/applications/{applicationId}/attachments/{attachmentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Download an application proof attachment
-         * @description Development review access only. Missing or mismatched application/attachment pairs return 404 JOIN_ATTACHMENT_NOT_FOUND. Always download; never preview. Two response slots are acquired before attachment reads; capacity failure is 503 and Retry-After: 5. A 60 second response deadline terminates started connections without a second JSON response. All responses use no-store.
-         */
-        get: operations["downloadJoinApplicationAttachment"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/invitations/check": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** checkInvitationEligibility */
-        post: operations["checkInvitationEligibility"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/invitations/code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** requestInvitationCode */
-        post: operations["requestInvitationCode"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/invitations/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** verifyInvitationCode */
-        post: operations["verifyInvitationCode"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/invitations/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** completeInvitationRegistration */
-        post: operations["completeInvitationRegistration"];
         delete?: never;
         options?: never;
         head?: never;
@@ -856,10 +747,455 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/registration/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** requestRegistrationCode */
+        post: operations["requestRegistrationCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/registration/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** verifyRegistrationCode */
+        post: operations["verifyRegistrationCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/registrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** completePublicRegistration */
+        post: operations["completePublicRegistration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/cfx/sign-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** signInWithCfx */
+        post: operations["signInWithCfx"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me/identity-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** getMyIdentityLinks */
+        get: operations["getMyIdentityLinks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me/identity-links/cfx/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** createMyCfxLinkAttempt */
+        post: operations["createMyCfxLinkAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me/identity-links/cfx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** linkMyCfxIdentity */
+        post: operations["linkMyCfxIdentity"];
+        /** unlinkMyCfxIdentity */
+        delete: operations["unlinkMyCfxIdentity"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/communities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** listCommunities */
+        get: operations["listCommunities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/communities/{communityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** getCommunity */
+        get: operations["getCommunity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me/communities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** listMyCommunityStatuses */
+        get: operations["listMyCommunityStatuses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me/communities/{communityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** getMyCommunityStatus */
+        get: operations["getMyCommunityStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me/review-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** getMyCommunityReviewAccess */
+        get: operations["getMyCommunityReviewAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** createCommunity */
+        post: operations["createCommunity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities/{communityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** updateCommunity */
+        put: operations["updateCommunity"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities/{communityId}/reviewers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** listCommunityReviewers */
+        get: operations["listCommunityReviewers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities/{communityId}/reviewers/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** grantCommunityReviewer */
+        put: operations["grantCommunityReviewer"];
+        post?: never;
+        /** revokeCommunityReviewer */
+        delete: operations["revokeCommunityReviewer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/communities/{communityId}/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit one complete join application
+         * @description Authenticated lifetime application for the path community. Applicant ownership and contact snapshots come from the current account. One multipart JSON part {qq,form} and optional proofs commit atomically. Cfx is a requirement, not a deduplication key.
+         */
+        post: operations["submitJoinApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities/{communityId}/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** listJoinApplications */
+        get: operations["listJoinApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities/{communityId}/applications/{applicationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** getJoinApplication */
+        get: operations["getJoinApplication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities/{communityId}/applications/{applicationId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** approveJoinApplication */
+        post: operations["approveJoinApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities/{communityId}/applications/{applicationId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** rejectJoinApplication */
+        post: operations["rejectJoinApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/communities/{communityId}/applications/{applicationId}/attachments/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download an application proof attachment
+         * @description Authorized community reviewer download. Check community, application and attachment ownership in one read snapshot. Original bounded bytes only; no inline preview. Existing response slot and deadline budgets apply.
+         */
+        get: operations["downloadJoinApplicationAttachment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CfxIdentity: {
+            id: string;
+            username: string;
+            /** Format: uri */
+            avatarUrl: string;
+            email: components["schemas"]["Email"];
+        };
+        /** @enum {string} */
+        CfxMode: "manual" | "redirect";
+        /** @description RSA-OAEP encrypted standard Base64; ASCII whitespace is accepted. */
+        CfxPayload: string;
+        CfxEmptyRequest: Record<string, never>;
+        CfxCompleteRequest: {
+            payload: components["schemas"]["CfxPayload"];
+        };
+        CfxAttemptCreated: {
+            attemptId: components["schemas"]["OpaqueIdentifier"];
+            mode: components["schemas"]["CfxMode"];
+            /** Format: uri */
+            authorizationUrl: string;
+            expiresAt: components["schemas"]["SafeTimestamp"];
+        };
+        CfxCompletion: {
+            attemptId: components["schemas"]["OpaqueIdentifier"];
+            /** @enum {string} */
+            state: "ready";
+        };
+        CfxCancellation: {
+            attemptId: components["schemas"]["OpaqueIdentifier"];
+            /** @enum {string} */
+            state: "cancelled" | "failed" | "expired" | "consumed";
+        };
+        /** @enum {string} */
+        CfxFailureCode: "CFX_INVALID_PAYLOAD" | "CFX_NONCE_INVALID" | "CFX_API_VERSION_UNSUPPORTED" | "CFX_USER_INVALID" | "CFX_EMAIL_UNAVAILABLE" | "CFX_UPSTREAM_UNAVAILABLE" | "CFX_UPSTREAM_TIMEOUT";
+        CfxPendingStatus: {
+            attemptId: components["schemas"]["OpaqueIdentifier"];
+            /** @enum {string} */
+            state: "pending" | "processing";
+            expiresAt: components["schemas"]["SafeTimestamp"];
+        };
+        CfxReadyStatus: {
+            attemptId: components["schemas"]["OpaqueIdentifier"];
+            /** @enum {string} */
+            state: "ready";
+            expiresAt: components["schemas"]["SafeTimestamp"];
+            identity: components["schemas"]["CfxIdentity"];
+            identityTicket: components["schemas"]["OpaqueIdentifier"];
+            ticketExpiresAt: components["schemas"]["SafeTimestamp"];
+        };
+        CfxFailedStatus: {
+            attemptId: components["schemas"]["OpaqueIdentifier"];
+            /** @enum {string} */
+            state: "failed";
+            expiresAt: components["schemas"]["SafeTimestamp"];
+            failureCode: components["schemas"]["CfxFailureCode"];
+        };
+        CfxTerminalStatus: {
+            attemptId: components["schemas"]["OpaqueIdentifier"];
+            /** @enum {string} */
+            state: "cancelled" | "expired" | "consumed";
+            expiresAt: components["schemas"]["SafeTimestamp"];
+        };
+        CfxAttemptStatus: components["schemas"]["CfxPendingStatus"] | components["schemas"]["CfxReadyStatus"] | components["schemas"]["CfxFailedStatus"] | components["schemas"]["CfxTerminalStatus"];
         OidcChallenge: string;
         OidcInspectRequest: {
             /** @enum {string} */
@@ -997,8 +1333,6 @@ export interface components {
             commitments: components["schemas"]["JoinNewCommitments"];
         };
         JoinNewApplicationPayload: {
-            email: components["schemas"]["Email"];
-            nickname: components["schemas"]["Nickname"];
             qq: components["schemas"]["JoinApplicationQq"];
             form: components["schemas"]["JoinNewForm"];
         };
@@ -1024,8 +1358,6 @@ export interface components {
             commitments: components["schemas"]["JoinExperiencedCommitments"];
         };
         JoinExperiencedApplicationPayload: {
-            email: components["schemas"]["Email"];
-            nickname: components["schemas"]["Nickname"];
             qq: components["schemas"]["JoinApplicationQq"];
             form: components["schemas"]["JoinExperiencedForm"];
         };
@@ -1035,40 +1367,6 @@ export interface components {
             proofs?: string[];
         };
         JoinApplicationPayload: components["schemas"]["JoinNewApplicationPayload"] | components["schemas"]["JoinExperiencedApplicationPayload"];
-        JoinApplicationQueryRequest: {
-            email: components["schemas"]["Email"];
-        };
-        JoinApplicationResult: {
-            /** @constant */
-            status: "not_found";
-            /** @constant */
-            nextAction: "apply";
-        } | {
-            /** @constant */
-            status: "pending";
-            /** @constant */
-            nextAction: "wait";
-        } | {
-            /** @constant */
-            status: "approved";
-            /** @constant */
-            nextAction: "register";
-        } | {
-            /** @constant */
-            status: "rejected";
-            /** @constant */
-            nextAction: "contact_community";
-        } | {
-            /** @constant */
-            status: "invitation_expired";
-            /** @constant */
-            nextAction: "contact_community";
-        } | {
-            /** @constant */
-            status: "registered";
-            /** @constant */
-            nextAction: "login";
-        };
         JoinApplicationAttachment: {
             id: components["schemas"]["Uuid"];
             /** @description Safe basename; reject path separators, controls, dot directory names and header injection characters. */
@@ -1089,16 +1387,17 @@ export interface components {
             createdAt: components["schemas"]["SafeTimestamp"];
             reviewedAt: number | null;
             reviewedByUserId: components["schemas"]["NullableUuid"];
-            /** @enum {string|null} */
-            invitationStatus: "active" | "expired" | "completed" | null;
-            /** @enum {string|null} */
-            deliveryStatus: "pending" | "sent" | "failed" | null;
             /** @constant */
             applicationType: "new";
+            communityId: components["schemas"]["CommunityId"];
+            applicantUserId: components["schemas"]["Uuid"];
+            /** @constant */
+            legacyReadOnly: false;
+            identitySnapshot: components["schemas"]["JoinIdentitySnapshot"] | null;
+            missingProviders: "cfx"[];
         };
         JoinNewApplicationDetail: {
             application: components["schemas"]["JoinNewApplicationSummary"];
-            invitation: components["schemas"]["InvitationSummary"] | null;
             serverTime: components["schemas"]["SafeTimestamp"];
             /** @constant */
             formVersion: 1;
@@ -1115,16 +1414,17 @@ export interface components {
             createdAt: components["schemas"]["SafeTimestamp"];
             reviewedAt: number | null;
             reviewedByUserId: components["schemas"]["NullableUuid"];
-            /** @enum {string|null} */
-            invitationStatus: "active" | "expired" | "completed" | null;
-            /** @enum {string|null} */
-            deliveryStatus: "pending" | "sent" | "failed" | null;
             /** @constant */
             applicationType: "experienced";
+            communityId: components["schemas"]["CommunityId"];
+            applicantUserId: components["schemas"]["Uuid"];
+            /** @constant */
+            legacyReadOnly: false;
+            identitySnapshot: components["schemas"]["JoinIdentitySnapshot"] | null;
+            missingProviders: "cfx"[];
         };
         JoinExperiencedApplicationDetail: {
             application: components["schemas"]["JoinExperiencedApplicationSummary"];
-            invitation: components["schemas"]["InvitationSummary"] | null;
             serverTime: components["schemas"]["SafeTimestamp"];
             /** @constant */
             formVersion: 1;
@@ -1147,6 +1447,12 @@ export interface components {
             deliveryStatus: "pending" | "sent" | "failed" | null;
             /** @constant */
             applicationType: "legacy";
+            communityId: components["schemas"]["CommunityId"];
+            applicantUserId: components["schemas"]["Uuid"] | null;
+            /** @constant */
+            legacyReadOnly: true;
+            identitySnapshot: components["schemas"]["JoinIdentitySnapshot"] | null;
+            missingProviders: "cfx"[];
         };
         JoinLegacyApplicationDetail: {
             application: components["schemas"]["JoinLegacyApplicationSummary"];
@@ -1161,65 +1467,7 @@ export interface components {
             /** @constant */
             status: "received";
         };
-        InvitationEligibilityRequest: {
-            email: components["schemas"]["Email"];
-        };
-        InvitationCodeRequest: {
-            email: components["schemas"]["Email"];
-        };
-        InvitationEligibility: {
-            /** @constant */
-            status: "eligible";
-            email: components["schemas"]["Email"];
-            serverTime: components["schemas"]["SafeTimestamp"];
-            resendAvailableAt: components["schemas"]["SafeTimestamp"];
-        };
-        InvitationCodeAccepted: {
-            /** @constant */
-            status: "accepted";
-            serverTime: components["schemas"]["SafeTimestamp"];
-            resendAvailableAt: components["schemas"]["SafeTimestamp"];
-        };
-        InvitationVerifyRequest: {
-            email: components["schemas"]["Email"];
-            code: components["schemas"]["VerificationCode"];
-        };
-        InvitationVerified: {
-            /** @constant */
-            status: "verified";
-            completionToken: components["schemas"]["OpaqueIdentifier"];
-            email: components["schemas"]["Email"];
-            nickname: components["schemas"]["Nickname"];
-            serverTime: components["schemas"]["SafeTimestamp"];
-            completionExpiresAt: components["schemas"]["SafeTimestamp"];
-        };
-        InvitationCompleteRequest: {
-            completionToken: components["schemas"]["OpaqueIdentifier"];
-            nickname: components["schemas"]["Nickname"];
-            password: components["schemas"]["Password"];
-        };
-        InvitationRegistrationCompleted: {
-            /** @constant */
-            status: "registered";
-            email: components["schemas"]["Email"];
-        };
-        JoinApplicationSummary: {
-            id: components["schemas"]["Uuid"];
-            email: components["schemas"]["Email"];
-            nickname: components["schemas"]["Nickname"];
-            qq: string;
-            /** @enum {string} */
-            status: "pending" | "approved" | "rejected";
-            createdAt: components["schemas"]["SafeTimestamp"];
-            reviewedAt: number | null;
-            reviewedByUserId: components["schemas"]["NullableUuid"];
-            /** @enum {string|null} */
-            invitationStatus: "active" | "expired" | "completed" | null;
-            /** @enum {string|null} */
-            deliveryStatus: "pending" | "sent" | "failed" | null;
-            /** @enum {string} */
-            applicationType: "new" | "experienced" | "legacy";
-        };
+        JoinApplicationSummary: components["schemas"]["JoinNewApplicationSummary"] | components["schemas"]["JoinHistoricalNewApplicationSummary"] | components["schemas"]["JoinExperiencedApplicationSummary"] | components["schemas"]["JoinHistoricalExperiencedApplicationSummary"] | components["schemas"]["JoinLegacyApplicationSummary"];
         InvitationDeliverySummary: {
             id: components["schemas"]["Uuid"];
             /** @enum {string} */
@@ -1239,8 +1487,8 @@ export interface components {
             resendAvailableAt: components["schemas"]["SafeTimestamp"];
             latestDelivery: components["schemas"]["InvitationDeliverySummary"] | null;
         };
-        /** @description Strict type/version/form/attachment pairing. Legacy is version 0, null form, no attachments. Corrupted version 1 records are never downgraded. */
-        JoinApplicationDetail: components["schemas"]["JoinNewApplicationDetail"] | components["schemas"]["JoinExperiencedApplicationDetail"] | components["schemas"]["JoinLegacyApplicationDetail"];
+        /** @description Strict live/historical type and form version pairing. Historical records are read-only even when their formVersion is 1. */
+        JoinApplicationDetail: components["schemas"]["JoinNewApplicationDetail"] | components["schemas"]["JoinHistoricalNewApplicationDetail"] | components["schemas"]["JoinExperiencedApplicationDetail"] | components["schemas"]["JoinHistoricalExperiencedApplicationDetail"] | components["schemas"]["JoinLegacyApplicationDetail"];
         JoinApplicationList: {
             items: components["schemas"]["JoinApplicationSummary"][];
             total: components["schemas"]["SafeTimestamp"];
@@ -1739,6 +1987,238 @@ export interface components {
             failure: null | components["schemas"]["FeedbackFailure"];
             attachments: components["schemas"]["FeedbackAttachment"][];
         };
+        RequestRegistrationCodeRequest: {
+            email: components["schemas"]["Email"];
+        };
+        VerifyRegistrationCodeRequest: {
+            challengeId: components["schemas"]["Uuid"];
+            code: components["schemas"]["VerificationCode"];
+        };
+        CompletePublicRegistrationRequest: {
+            registrationToken: components["schemas"]["OpaqueIdentifier"];
+            nickname: components["schemas"]["Nickname"];
+            password: components["schemas"]["Password"];
+        };
+        RegistrationCodeRequested: {
+            /** @constant */
+            status: "accepted";
+            challengeId: components["schemas"]["Uuid"];
+            serverTime: components["schemas"]["SafeTimestamp"];
+            resendAvailableAt: components["schemas"]["SafeTimestamp"];
+        };
+        RegistrationGrant: {
+            registrationToken: components["schemas"]["OpaqueIdentifier"];
+            email: components["schemas"]["Email"];
+            expiresAt: components["schemas"]["SafeTimestamp"];
+        };
+        RegistrationResult: {
+            /** @constant */
+            status: "registered";
+            userId: components["schemas"]["Uuid"];
+            email: components["schemas"]["Email"];
+        };
+        CfxSignInRequest: {
+            identityTicket: components["schemas"]["OpaqueIdentifier"];
+        };
+        CfxSignInResult: {
+            /** @constant */
+            kind: "signed-in";
+            token: components["schemas"]["OpaqueIdentifier"];
+            expiresAt: components["schemas"]["SafeTimestamp"];
+        } | {
+            /** @constant */
+            kind: "registration-required";
+            registrationToken: components["schemas"]["OpaqueIdentifier"];
+            email: components["schemas"]["Email"];
+            suggestedNickname: components["schemas"]["Nickname"] | null;
+            expiresAt: components["schemas"]["SafeTimestamp"];
+        } | {
+            /** @constant */
+            kind: "account-exists";
+            email: components["schemas"]["Email"];
+            /** @constant */
+            nextAction: "login_then_link";
+        };
+        /** @enum {string} */
+        IdentityProvider: "cfx" | "google" | "qq";
+        IdentityLink: {
+            id: components["schemas"]["Uuid"];
+            /** @constant */
+            provider: "cfx";
+            externalUserId: string;
+            externalUsername: string;
+            providerEmail: components["schemas"]["Email"];
+            linkedAt: components["schemas"]["SafeTimestamp"];
+        };
+        IdentityLinksResponse: {
+            /** @description Exactly one entry for each provider, in cfx, google, qq order. Order is enforced by the raw handler and HTTP response tests. Google and QQ are disabled and unlinked. */
+            providers: ({
+                /** @constant */
+                provider: "cfx";
+                available: boolean;
+                link: components["schemas"]["IdentityLink"] | null;
+            } | {
+                /** @constant */
+                provider: "google";
+                /** @constant */
+                available: false;
+                link: null;
+            } | {
+                /** @constant */
+                provider: "qq";
+                /** @constant */
+                available: false;
+                link: null;
+            })[];
+        };
+        LinkMyCfxIdentityRequest: {
+            attemptId: components["schemas"]["OpaqueIdentifier"];
+            identityTicket: components["schemas"]["OpaqueIdentifier"];
+        };
+        UnlinkIdentityResult: {
+            /** @constant */
+            status: "unlinked";
+        };
+        CommunityId: string;
+        Community: {
+            id: components["schemas"]["CommunityId"];
+            displayName: string;
+            requiresCfx: boolean;
+            configRevision: components["schemas"]["SafeTimestamp"];
+        };
+        CreateCommunityRequest: {
+            id: components["schemas"]["CommunityId"];
+            displayName: string;
+            requiresCfx: boolean;
+        };
+        UpdateCommunityRequest: {
+            displayName: string;
+            requiresCfx: boolean;
+            expectedRevision: components["schemas"]["SafeTimestamp"];
+        };
+        CommunityList: {
+            items: components["schemas"]["Community"][];
+            limit: number;
+            offset: components["schemas"]["SafeTimestamp"];
+            total: components["schemas"]["SafeTimestamp"];
+        };
+        MyCommunityApplication: {
+            id: components["schemas"]["Uuid"];
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected";
+            createdAt: components["schemas"]["SafeTimestamp"];
+            reviewedAt: components["schemas"]["SafeTimestamp"] | null;
+        };
+        MyCommunityMembership: {
+            applicationId: components["schemas"]["Uuid"];
+            joinedAt: components["schemas"]["SafeTimestamp"];
+        };
+        MyCommunityStatus: {
+            communityId: components["schemas"]["CommunityId"];
+            application: components["schemas"]["MyCommunityApplication"] | null;
+            membership: components["schemas"]["MyCommunityMembership"] | null;
+            requiredProviders: "cfx"[];
+            missingProviders: "cfx"[];
+            requirementsMet: boolean;
+            websiteReady: boolean;
+        };
+        MyCommunityStatusList: {
+            items: components["schemas"]["MyCommunityStatus"][];
+            limit: number;
+            offset: components["schemas"]["SafeTimestamp"];
+            total: components["schemas"]["SafeTimestamp"];
+        };
+        CommunityReviewAccess: {
+            isPlatformAdmin: boolean;
+            communities: components["schemas"]["Community"][];
+        };
+        CommunityReviewer: {
+            userId: components["schemas"]["Uuid"];
+            nickname: components["schemas"]["Nickname"];
+            grantedByUserId: components["schemas"]["Uuid"];
+            grantedAt: components["schemas"]["SafeTimestamp"];
+        };
+        CommunityReviewerList: {
+            items: components["schemas"]["CommunityReviewer"][];
+            limit: number;
+            offset: components["schemas"]["SafeTimestamp"];
+            total: components["schemas"]["SafeTimestamp"];
+        };
+        RevokeCommunityReviewerResult: {
+            /** @constant */
+            status: "revoked";
+        };
+        JoinIdentitySnapshot: {
+            /** @constant */
+            provider: "cfx";
+            externalUserId: string;
+            externalUsername: string;
+            linkedAt: components["schemas"]["SafeTimestamp"];
+        };
+        JoinHistoricalNewApplicationSummary: {
+            id: components["schemas"]["Uuid"];
+            email: components["schemas"]["Email"];
+            nickname: components["schemas"]["Nickname"];
+            qq: string;
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected";
+            createdAt: components["schemas"]["SafeTimestamp"];
+            reviewedAt: number | null;
+            reviewedByUserId: components["schemas"]["NullableUuid"];
+            /** @enum {string|null} */
+            invitationStatus: "active" | "expired" | "completed" | null;
+            /** @enum {string|null} */
+            deliveryStatus: "pending" | "sent" | "failed" | null;
+            /** @constant */
+            applicationType: "new";
+            communityId: components["schemas"]["CommunityId"];
+            applicantUserId: components["schemas"]["Uuid"] | null;
+            /** @constant */
+            legacyReadOnly: true;
+            identitySnapshot: components["schemas"]["JoinIdentitySnapshot"] | null;
+            missingProviders: "cfx"[];
+        };
+        JoinHistoricalNewApplicationDetail: {
+            application: components["schemas"]["JoinHistoricalNewApplicationSummary"];
+            invitation: components["schemas"]["InvitationSummary"] | null;
+            serverTime: components["schemas"]["SafeTimestamp"];
+            /** @constant */
+            formVersion: 1;
+            form: components["schemas"]["JoinNewForm"];
+            attachments: components["schemas"]["JoinApplicationAttachment"][];
+        };
+        JoinHistoricalExperiencedApplicationSummary: {
+            id: components["schemas"]["Uuid"];
+            email: components["schemas"]["Email"];
+            nickname: components["schemas"]["Nickname"];
+            qq: string;
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected";
+            createdAt: components["schemas"]["SafeTimestamp"];
+            reviewedAt: number | null;
+            reviewedByUserId: components["schemas"]["NullableUuid"];
+            /** @enum {string|null} */
+            invitationStatus: "active" | "expired" | "completed" | null;
+            /** @enum {string|null} */
+            deliveryStatus: "pending" | "sent" | "failed" | null;
+            /** @constant */
+            applicationType: "experienced";
+            communityId: components["schemas"]["CommunityId"];
+            applicantUserId: components["schemas"]["Uuid"] | null;
+            /** @constant */
+            legacyReadOnly: true;
+            identitySnapshot: components["schemas"]["JoinIdentitySnapshot"] | null;
+            missingProviders: "cfx"[];
+        };
+        JoinHistoricalExperiencedApplicationDetail: {
+            application: components["schemas"]["JoinHistoricalExperiencedApplicationSummary"];
+            invitation: components["schemas"]["InvitationSummary"] | null;
+            serverTime: components["schemas"]["SafeTimestamp"];
+            /** @constant */
+            formVersion: 1;
+            form: components["schemas"]["JoinExperiencedForm"];
+            attachments: components["schemas"]["JoinApplicationAttachment"][];
+        };
     };
     responses: {
         /** @description Safe application error response */
@@ -1764,6 +2244,33 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
+        /** @description Safe application error response */
+        CredentialErrorResponse: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                "Cache-Control": "no-store";
+                "Referrer-Policy": "no-referrer";
+                "X-Content-Type-Options": "nosniff";
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
+        /** @description Safe application error response with a retry delay */
+        CredentialRetryableErrorResponse: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                "Cache-Control": "no-store";
+                "Retry-After": components["headers"]["RetryAfter"];
+                "Referrer-Policy": "no-referrer";
+                "X-Content-Type-Options": "nosniff";
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
     };
     parameters: never;
     requestBodies: never;
@@ -1783,6 +2290,758 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    createCfxAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                Cookie?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CfxEmptyRequest"];
+            };
+        };
+        responses: {
+            /** @description Browser-bound verification result */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    /** @description HttpOnly binding; SameSite=Lax, Path=/, Max-Age=1200; Secure in production. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CfxAttemptCreated"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            413: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            415: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            default: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    completeCfxManualAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                Cookie?: string;
+            };
+            path: {
+                id: components["schemas"]["OpaqueIdentifier"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CfxCompleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Browser-bound verification result */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CfxCompletion"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            410: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            413: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            415: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            502: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            504: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            default: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    receiveCfxCallback: {
+        parameters: {
+            query: {
+                attemptId: components["schemas"]["OpaqueIdentifier"];
+                payload: components["schemas"]["CfxPayload"];
+            };
+            header?: {
+                Cookie?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Browser-bound verification result */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CfxCompletion"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            409: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            410: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            502: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            504: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            default: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getCfxAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                Cookie?: string;
+            };
+            path: {
+                id: components["schemas"]["OpaqueIdentifier"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Browser-bound verification result */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CfxAttemptStatus"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            default: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    cancelCfxAttempt: {
+        parameters: {
+            query?: never;
+            header?: {
+                Cookie?: string;
+            };
+            path: {
+                id: components["schemas"]["OpaqueIdentifier"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Browser-bound verification result */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CfxCancellation"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            400: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            403: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            404: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            429: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    "Retry-After": components["headers"]["RetryAfter"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            500: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            503: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Safe Cfx or framework error */
+            default: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     getHealth: {
         parameters: {
             query?: never;
@@ -1825,376 +3084,6 @@ export interface operations {
                     "application/json": components["schemas"]["CaptchaChallenge"];
                 };
             };
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    submitJoinApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["JoinApplicationRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation; not cacheable. */
-            202: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinApplicationReceived"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            408: components["responses"]["ErrorResponse"];
-            409: components["responses"]["ErrorResponse"];
-            413: components["responses"]["ErrorResponse"];
-            415: components["responses"]["ErrorResponse"];
-            429: components["responses"]["RetryableErrorResponse"];
-            500: components["responses"]["ErrorResponse"];
-            503: components["responses"]["RetryableErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    queryJoinApplicationResult: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinApplicationQueryRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation; not cacheable. */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinApplicationResult"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            429: components["responses"]["RetryableErrorResponse"];
-            500: components["responses"]["ErrorResponse"];
-        };
-    };
-    listJoinApplications: {
-        parameters: {
-            query?: {
-                view?: "pending" | "all";
-                limit?: string;
-                offset?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful operation */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinApplicationList"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    getJoinApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["schemas"]["Uuid"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful operation */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinApplicationDetail"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            404: components["responses"]["ErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    approveJoinApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["schemas"]["Uuid"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinReviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinApplicationDetail"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            404: components["responses"]["ErrorResponse"];
-            409: components["responses"]["ErrorResponse"];
-            429: components["responses"]["RetryableErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    rejectJoinApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["schemas"]["Uuid"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinReviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinApplicationDetail"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            404: components["responses"]["ErrorResponse"];
-            409: components["responses"]["ErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    resendJoinInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["schemas"]["Uuid"];
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinReviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinApplicationDetail"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            404: components["responses"]["ErrorResponse"];
-            409: components["responses"]["ErrorResponse"];
-            429: components["responses"]["RetryableErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    downloadJoinApplicationAttachment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicationId: components["schemas"]["Uuid"];
-                attachmentId: components["schemas"]["Uuid"];
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Original attachment bytes. */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    /** @description attachment; safe ASCII filename fallback and UTF-8 filename*. */
-                    "Content-Disposition": string;
-                    "X-Content-Type-Options": "nosniff";
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            404: components["responses"]["ErrorResponse"];
-            500: components["responses"]["ErrorResponse"];
-            503: components["responses"]["RetryableErrorResponse"];
-        };
-    };
-    checkInvitationEligibility: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InvitationEligibilityRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationEligibility"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            404: components["responses"]["ErrorResponse"];
-            409: components["responses"]["ErrorResponse"];
-            429: components["responses"]["RetryableErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    requestInvitationCode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InvitationCodeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation */
-            202: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationCodeAccepted"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            429: components["responses"]["RetryableErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    verifyInvitationCode: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InvitationVerifyRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationVerified"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            429: components["responses"]["RetryableErrorResponse"];
-            default: components["responses"]["ErrorResponse"];
-        };
-    };
-    completeInvitationRegistration: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InvitationCompleteRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful operation */
-            200: {
-                headers: {
-                    "X-Request-Id": components["headers"]["RequestId"];
-                    "Cache-Control": components["headers"]["CacheControl"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InvitationRegistrationCompleted"];
-                };
-            };
-            400: components["responses"]["ErrorResponse"];
-            401: components["responses"]["ErrorResponse"];
-            409: components["responses"]["ErrorResponse"];
-            429: components["responses"]["RetryableErrorResponse"];
-            503: components["responses"]["RetryableErrorResponse"];
             default: components["responses"]["ErrorResponse"];
         };
     };
@@ -3306,6 +4195,850 @@ export interface operations {
             500: components["responses"]["ErrorResponse"];
             503: components["responses"]["ErrorResponse"];
             default: components["responses"]["ErrorResponse"];
+        };
+    };
+    requestRegistrationCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestRegistrationCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            202: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationCodeRequested"];
+                };
+            };
+            400: components["responses"]["CredentialErrorResponse"];
+            403: components["responses"]["CredentialErrorResponse"];
+            409: components["responses"]["CredentialErrorResponse"];
+            429: components["responses"]["CredentialRetryableErrorResponse"];
+            503: components["responses"]["CredentialRetryableErrorResponse"];
+            default: components["responses"]["CredentialErrorResponse"];
+        };
+    };
+    verifyRegistrationCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyRegistrationCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationGrant"];
+                };
+            };
+            400: components["responses"]["CredentialErrorResponse"];
+            403: components["responses"]["CredentialErrorResponse"];
+            409: components["responses"]["CredentialErrorResponse"];
+            410: components["responses"]["CredentialErrorResponse"];
+            429: components["responses"]["CredentialRetryableErrorResponse"];
+            503: components["responses"]["CredentialRetryableErrorResponse"];
+            default: components["responses"]["CredentialErrorResponse"];
+        };
+    };
+    completePublicRegistration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompletePublicRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationResult"];
+                };
+            };
+            /** @description Successful operation; not cacheable. */
+            201: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationResult"];
+                };
+            };
+            400: components["responses"]["CredentialErrorResponse"];
+            403: components["responses"]["CredentialErrorResponse"];
+            409: components["responses"]["CredentialErrorResponse"];
+            410: components["responses"]["CredentialErrorResponse"];
+            429: components["responses"]["CredentialRetryableErrorResponse"];
+            503: components["responses"]["CredentialRetryableErrorResponse"];
+            default: components["responses"]["CredentialErrorResponse"];
+        };
+    };
+    signInWithCfx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CfxSignInRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CfxSignInResult"];
+                };
+            };
+            400: components["responses"]["CredentialErrorResponse"];
+            403: components["responses"]["CredentialErrorResponse"];
+            409: components["responses"]["CredentialErrorResponse"];
+            410: components["responses"]["CredentialErrorResponse"];
+            429: components["responses"]["CredentialRetryableErrorResponse"];
+            503: components["responses"]["CredentialRetryableErrorResponse"];
+            default: components["responses"]["CredentialErrorResponse"];
+        };
+    };
+    getMyIdentityLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityLinksResponse"];
+                };
+            };
+            400: components["responses"]["CredentialErrorResponse"];
+            401: components["responses"]["CredentialErrorResponse"];
+            403: components["responses"]["CredentialErrorResponse"];
+            default: components["responses"]["CredentialErrorResponse"];
+        };
+    };
+    createMyCfxLinkAttempt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CfxEmptyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            201: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CfxAttemptCreated"];
+                };
+            };
+            400: components["responses"]["CredentialErrorResponse"];
+            401: components["responses"]["CredentialErrorResponse"];
+            403: components["responses"]["CredentialErrorResponse"];
+            409: components["responses"]["CredentialErrorResponse"];
+            429: components["responses"]["CredentialRetryableErrorResponse"];
+            503: components["responses"]["CredentialRetryableErrorResponse"];
+            default: components["responses"]["CredentialErrorResponse"];
+        };
+    };
+    linkMyCfxIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkMyCfxIdentityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            201: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityLink"];
+                };
+            };
+            400: components["responses"]["CredentialErrorResponse"];
+            401: components["responses"]["CredentialErrorResponse"];
+            403: components["responses"]["CredentialErrorResponse"];
+            409: components["responses"]["CredentialErrorResponse"];
+            410: components["responses"]["CredentialErrorResponse"];
+            429: components["responses"]["CredentialRetryableErrorResponse"];
+            503: components["responses"]["CredentialRetryableErrorResponse"];
+            default: components["responses"]["CredentialErrorResponse"];
+        };
+    };
+    unlinkMyCfxIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    /** @description Server-generated request identifier. */
+                    "X-Request-Id": string;
+                    /** @description Authentication responses are not cacheable. */
+                    "Cache-Control": "no-store";
+                    "Referrer-Policy": "no-referrer";
+                    /** @description Disables MIME sniffing so stored bytes are never rendered inline. */
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnlinkIdentityResult"];
+                };
+            };
+            400: components["responses"]["CredentialErrorResponse"];
+            401: components["responses"]["CredentialErrorResponse"];
+            403: components["responses"]["CredentialErrorResponse"];
+            409: components["responses"]["CredentialErrorResponse"];
+            default: components["responses"]["CredentialErrorResponse"];
+        };
+    };
+    listCommunities: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityList"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    getCommunity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Community"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    listMyCommunityStatuses: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyCommunityStatusList"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    getMyCommunityStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyCommunityStatus"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    getMyCommunityReviewAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityReviewAccess"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    createCommunity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCommunityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            201: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Community"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            409: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    updateCommunity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCommunityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Community"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            409: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    listCommunityReviewers: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityReviewerList"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    grantCommunityReviewer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+                userId: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CfxEmptyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommunityReviewer"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            409: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    revokeCommunityReviewer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+                userId: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RevokeCommunityReviewerResult"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    submitJoinApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["JoinApplicationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            202: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinApplicationReceived"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            408: components["responses"]["ErrorResponse"];
+            409: components["responses"]["ErrorResponse"];
+            413: components["responses"]["ErrorResponse"];
+            415: components["responses"]["ErrorResponse"];
+            429: components["responses"]["RetryableErrorResponse"];
+            500: components["responses"]["ErrorResponse"];
+            503: components["responses"]["RetryableErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    listJoinApplications: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                status?: "pending" | "approved" | "rejected";
+                source?: "live" | "legacy" | "all";
+            };
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinApplicationList"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    getJoinApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+                applicationId: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinApplicationDetail"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    approveJoinApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+                applicationId: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinApplicationDetail"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            409: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    rejectJoinApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+                applicationId: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful operation; not cacheable. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options": components["headers"]["ContentTypeOptions"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JoinApplicationDetail"];
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            409: components["responses"]["ErrorResponse"];
+            default: components["responses"]["ErrorResponse"];
+        };
+    };
+    downloadJoinApplicationAttachment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                communityId: components["schemas"]["CommunityId"];
+                applicationId: components["schemas"]["Uuid"];
+                attachmentId: components["schemas"]["Uuid"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Original attachment bytes. */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "Cache-Control": components["headers"]["CacheControl"];
+                    /** @description attachment; safe ASCII filename fallback and UTF-8 filename*. */
+                    "Content-Disposition": string;
+                    "X-Content-Type-Options": "nosniff";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            400: components["responses"]["ErrorResponse"];
+            401: components["responses"]["ErrorResponse"];
+            403: components["responses"]["ErrorResponse"];
+            404: components["responses"]["ErrorResponse"];
+            500: components["responses"]["ErrorResponse"];
+            503: components["responses"]["RetryableErrorResponse"];
         };
     };
 }

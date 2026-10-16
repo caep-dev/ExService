@@ -49,7 +49,7 @@ import { ProofFileInput } from "@components/src/join/ProofFileInput";
 import styles from "@components/src/join/CompleteJoinApplication.module.scss";
 
 export interface CompleteJoinApplicationModalHandle {
-  setError: (message: string, field?: "email" | "nickname" | "qq") => void;
+  setError: (message: string, field?: "qq") => void;
   getDraft: () =>
     | FormSnapshot<NewJoinApplicationInput | ExperiencedJoinApplicationInput>
     | undefined;
@@ -59,6 +59,8 @@ interface InternalHandle extends CompleteJoinApplicationModalHandle {
 }
 export interface CompleteJoinApplicationModalProps {
   open: boolean;
+  account?: { email: string; nickname: string };
+  submitDisabled?: boolean;
   applicationType: JoinApplicationType;
   step: number;
   busy: boolean;
@@ -163,7 +165,7 @@ const stepHints = {
     "补充基本资料，并选择你希望申请的部门。",
     "谈谈你对角色扮演和紧急职业模拟的理解。",
     "最后补充你的空闲安排和了解我们的渠道。",
-    "请核对全部资料和证明文件，并阅读、确认申请承诺。提交后资料不可修改，同一邮箱只能申请一次。",
+    "请核对全部资料和证明文件，并阅读、确认申请承诺。提交后资料不可修改，每个账号在每个社区终身只能申请一次。",
   ],
   experienced: [
     "留下常用联系方式，方便接收审核结果。",
@@ -171,7 +173,7 @@ const stepHints = {
     "介绍一下你过去的服务器与任职经历。",
     "完成以下问答，如有证明材料也可以一并补充。",
     "最后补充你的空闲安排和了解我们的渠道。",
-    "请核对全部资料和证明文件，并阅读、确认申请承诺。提交后资料不可修改，同一邮箱只能申请一次。",
+    "请核对全部资料和证明文件，并阅读、确认申请承诺。提交后资料不可修改，每个账号在每个社区终身只能申请一次。",
   ],
 };
 function Wizard<T extends FormValues, O extends JoinApplicationDraft>({
@@ -392,6 +394,7 @@ function Wizard<T extends FormValues, O extends JoinApplicationDraft>({
         <p className={styles.hint} aria-live="polite">
           {stepHints[applicationType][step]}
         </p>
+        {props.account && <dl aria-label="当前申请账号"><dt>账户邮箱</dt><dd>{props.account.email}</dd><dt>账户名字</dt><dd>{props.account.nickname}</dd></dl>}
         {step === last && <FormSummary form={form} type={applicationType} />}
         {serverAction && (
           <div className={styles.serverAction}>{serverAction}</div>
@@ -425,9 +428,9 @@ function Wizard<T extends FormValues, O extends JoinApplicationDraft>({
                 )}
                 <Button
                   type="button"
-                  disabled={disabled || args.state.isValidating}
+                  disabled={disabled || args.state.isValidating || (args.isLastStep && props.submitDisabled)}
                   onClick={() => {
-                    if (args.isLastStep) void args.submit();
+                    if (args.isLastStep) { if (!props.submitDisabled) void args.submit(); }
                     else void args.next();
                   }}
                 >
@@ -473,8 +476,6 @@ function NewApplicationForm(props: FormProps) {
       props.initialDraft?.form.applicationType === "new"
         ? (restoreDraft(props.initialDraft) as NewJoinApplicationInput)
         : {
-            email: "",
-            nickname: "",
             qq: "",
             proofs: [],
             form: {
@@ -507,8 +508,6 @@ function ExperiencedApplicationForm(props: FormProps) {
       props.initialDraft?.form.applicationType === "experienced"
         ? (restoreDraft(props.initialDraft) as ExperiencedJoinApplicationInput)
         : {
-            email: "",
-            nickname: "",
             qq: "",
             proofs: [],
             form: {

@@ -1,38 +1,39 @@
 export const AUTH_TOKEN_KEY = 'exwebsite.auth.token'
 export const SSO_SUCCESS_KEY = 'exwebsite.auth.sso-success'
 let updateHttpToken: ((token: string | null) => void) | undefined
-const subscribers = new Set<() => void>()
+export type SessionChangeSource = 'storage' | 'http' | 'write' | 'remove' | 'logout'
+const subscribers = new Set<(token: string | null, source: SessionChangeSource) => void>()
 
 export function bindSessionHttp(setToken: (token: string | null) => void): void {
   updateHttpToken = setToken
   try { setToken(readToken(window.localStorage)) } catch { setToken(null) }
 }
 
-export function subscribeSessionChanges(listener: () => void): () => void {
+export function subscribeSessionChanges(listener: (token: string | null, source: SessionChangeSource) => void): () => void {
   subscribers.add(listener)
   return () => subscribers.delete(listener)
 }
 
-function changed(token: string | null): void {
+function changed(token: string | null, source: SessionChangeSource): void {
   updateHttpToken?.(token)
-  for (const listener of subscribers) listener()
+  for (const listener of subscribers) listener(token, source)
 }
 
 export function startSessionSync(): () => void {
   const onStorage = (event: StorageEvent) => {
     if (event.key !== AUTH_TOKEN_KEY) return
-    syncSessionToken()
+    syncSessionToken('storage')
   }
   window.addEventListener('storage', onStorage)
   return () => window.removeEventListener('storage', onStorage)
 }
 
-export function syncSessionToken(): string | null | undefined {
+export function syncSessionToken(source: 'storage' | 'http' = 'http'): string | null | undefined {
   try {
     const token = readToken(window.localStorage)
-    changed(token)
+    changed(token, source)
     return token
-  } catch { changed(null); return undefined }
+  } catch { changed(null, source); return undefined }
 }
 
 export function readToken(storage: Pick<Storage, 'getItem'>): string | null {
@@ -41,13 +42,13 @@ export function readToken(storage: Pick<Storage, 'getItem'>): string | null {
 
 export function writeToken(storage: Pick<Storage, 'setItem'>, token: string): void {
   storage.setItem(AUTH_TOKEN_KEY, token)
-  changed(token)
+  changed(token, 'write')
 }
 
 export function removeMatchingToken(storage: Pick<Storage, 'getItem' | 'removeItem'>, token: string): void {
   if (storage.getItem(AUTH_TOKEN_KEY) === token) {
     storage.removeItem(AUTH_TOKEN_KEY)
-    changed(null)
+    changed(null, 'remove')
   }
 }
 
@@ -55,7 +56,7 @@ export function removeMatchingToken(storage: Pick<Storage, 'getItem' | 'removeIt
 export function clearBrowserSession(): void {
   try { window.localStorage.removeItem(AUTH_TOKEN_KEY) } catch { /* still clear in-memory authentication */ }
   try { window.sessionStorage.removeItem(SSO_SUCCESS_KEY) } catch { /* independent of token cleanup */ }
-  changed(null)
+  changed(null, 'logout')
 }
 
 export function writeSsoSuccess(

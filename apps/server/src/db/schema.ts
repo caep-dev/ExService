@@ -187,19 +187,92 @@ export const communityGroupMemberships = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.groupCode] })],
 )
 
+export const authIdentityLinks = pgTable('auth_identity_links', {
+  id: text('id').primaryKey(), userId: text('user_id').notNull().references(() => authUsers.id),
+  provider: text('provider').notNull(), externalUserId: text('external_user_id').notNull(),
+  externalUsername: text('external_username').notNull(), providerEmail: text('provider_email'),
+  linkedAt: bigint('linked_at', { mode: 'number' }).notNull(),
+}, table => [
+  uniqueIndex('auth_identity_links_subject_unique').on(table.provider, table.externalUserId),
+  uniqueIndex('auth_identity_links_user_provider_unique').on(table.userId, table.provider),
+  check('auth_identity_links_provider_check', sql`${table.provider} = 'cfx'`),
+  check('auth_identity_links_subject_check', sql`${table.externalUserId} ~ '^[1-9][0-9]*$'`),
+])
+export const authRegistrationEmails = pgTable('auth_registration_emails', {
+  id: text('id').primaryKey(), email: text('email').notNull().unique(), codeVersion: integer('code_version').notNull().default(0),
+  codeHmac: text('code_hmac'), codeExpiresAt: bigint('code_expires_at', { mode: 'number' }), codeBrowserBindingHash: text('code_browser_binding_hash'),
+  nextSendAt: bigint('next_send_at', { mode: 'number' }).notNull(), failedAttempts: integer('failed_attempts').notNull().default(0),
+  failureWindowStartedAt: bigint('failure_window_started_at', { mode: 'number' }), updatedAt: bigint('updated_at', { mode: 'number' }).notNull(),
+}, table => [
+  check('auth_registration_emails_version_check', sql`${table.codeVersion} >= 0`),
+  check('auth_registration_emails_failures_check', sql`${table.failedAttempts} between 0 and 5`),
+  check('auth_registration_emails_material_check', sql`(${table.codeHmac} is null and ${table.codeExpiresAt} is null and ${table.codeBrowserBindingHash} is null) or (${table.codeHmac} is not null and ${table.codeExpiresAt} is not null and ${table.codeBrowserBindingHash} is not null)`),
+])
+export const authRegistrationDeliveries = pgTable('auth_registration_deliveries', {
+  id: text('id').primaryKey(), registrationEmailId: text('registration_email_id').notNull().references(() => authRegistrationEmails.id),
+  codeVersion: integer('code_version').notNull(), status: text('status').notNull(),
+  createdAt: bigint('created_at', { mode: 'number' }).notNull(), finishedAt: bigint('finished_at', { mode: 'number' }),
+}, table => [
+  uniqueIndex('auth_registration_deliveries_version_unique').on(table.registrationEmailId, table.codeVersion),
+  check('auth_registration_deliveries_version_check', sql`${table.codeVersion} >= 1`),
+  check('auth_registration_deliveries_status_check', sql`${table.status} in ('pending', 'sent', 'failed')`),
+  check('auth_registration_deliveries_finished_check', sql`(${table.status} = 'pending' and ${table.finishedAt} is null) or (${table.status} <> 'pending' and ${table.finishedAt} is not null)`),
+])
+export const authRegistrationGrants = pgTable('auth_registration_grants', {
+  id: text('id').primaryKey(), tokenHash: text('token_hash').notNull().unique(), browserBindingHash: text('browser_binding_hash').notNull(),
+  kind: text('kind').notNull(), email: text('email').notNull(), externalUserId: text('external_user_id'), externalUsername: text('external_username'), providerEmail: text('provider_email'),
+  state: text('state').notNull(), expiresAt: bigint('expires_at', { mode: 'number' }).notNull(), createdAt: bigint('created_at', { mode: 'number' }).notNull(),
+  consumedAt: bigint('consumed_at', { mode: 'number' }), processingStartedAt: bigint('processing_started_at', { mode: 'number' }),
+  completedAt: bigint('completed_at', { mode: 'number' }), completedUserId: text('completed_user_id').references(() => authUsers.id),
+}, table => [
+  check('auth_registration_grants_kind_check', sql`(${table.kind} = 'email' and ${table.externalUserId} is null and ${table.externalUsername} is null and ${table.providerEmail} is null) or (${table.kind} = 'cfx' and ${table.externalUserId} is not null and ${table.externalUserId} ~ '^[1-9][0-9]*$' and ${table.externalUsername} is not null and ${table.providerEmail} is not null)`),
+  check('auth_registration_grants_state_check', sql`${table.state} in ('active', 'processing', 'completed', 'failed')`),
+  check('auth_registration_grants_processing_check', sql`${table.state} <> 'processing' or ${table.processingStartedAt} is not null`),
+  check('auth_registration_grants_completed_check', sql`(${table.state} = 'completed' and ${table.completedAt} is not null and ${table.completedUserId} is not null) or (${table.state} <> 'completed' and ${table.completedAt} is null and ${table.completedUserId} is null)`),
+  index('auth_registration_grants_expiry_idx').on(table.expiresAt),
+])
+export const communities = pgTable('communities', {
+  id: text('id').primaryKey(), displayName: text('display_name').notNull(), requiresCfx: boolean('requires_cfx').notNull(),
+  configRevision: integer('config_revision').notNull().default(0),
+  createdAt: bigint('created_at', { mode: 'number' }).notNull(), updatedAt: bigint('updated_at', { mode: 'number' }).notNull(),
+}, table => [
+  check('communities_id_check', sql`char_length(${table.id}) between 1 and 64 and ${table.id} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
+  check('communities_display_name_check', sql`char_length(${table.displayName}) between 1 and 80`),
+  check('communities_revision_check', sql`${table.configRevision} >= 0`),
+])
+export const communityReviewers = pgTable('community_reviewers', {
+  communityId: text('community_id').notNull().references(() => communities.id), userId: text('user_id').notNull().references(() => authUsers.id),
+  grantedByUserId: text('granted_by_user_id').notNull().references(() => authUsers.id), grantedAt: bigint('granted_at', { mode: 'number' }).notNull(),
+}, table => [primaryKey({ columns: [table.communityId, table.userId] })])
+
 export const joinApplications = pgTable('join_applications', {
   id: text('id').primaryKey(), email: text('email').notNull(), nickname: text('nickname').notNull(), qq: text('qq').notNull(),
   status: text('status').notNull(), createdAt: bigint('created_at', { mode: 'number' }).notNull(), reviewedAt: bigint('reviewed_at', { mode: 'number' }),
   reviewedByUserId: text('reviewed_by_user_id').references(() => authUsers.id),
   formVersion: integer('form_version').notNull().default(0),
+  communityId: text('community_id').notNull().references(() => communities.id),
+  userId: text('user_id').references(() => authUsers.id), legacyReadOnly: boolean('legacy_read_only').notNull().default(false),
+  identitySnapshotJson: text('identity_snapshot_json'),
 }, table => [
   check('join_applications_form_version_check', sql`${table.formVersion} in (0, 1)`),
   check('join_applications_status_check', sql`${table.status} in ('pending', 'approved', 'rejected')`),
   check('join_applications_review_check', sql`(${table.status} = 'pending' and ${table.reviewedAt} is null) or (${table.status} <> 'pending' and ${table.reviewedAt} is not null)`),
-  uniqueIndex('join_applications_open_email_unique').on(table.email).where(sql`${table.status} in ('pending', 'approved')`),
+  check('join_applications_owner_check', sql`${table.legacyReadOnly} or ${table.userId} is not null`),
+  check('join_applications_reviewer_check', sql`(${table.status} = 'pending' and ${table.reviewedByUserId} is null) or (${table.status} <> 'pending' and (${table.legacyReadOnly} or ${table.reviewedByUserId} is not null))`),
+  uniqueIndex('join_applications_user_community_unique').on(table.userId, table.communityId).where(sql`${table.userId} is not null`),
+  uniqueIndex('join_applications_identity_unique').on(table.id, table.userId, table.communityId),
+  index('join_applications_community_list_idx').on(table.communityId, table.status, table.createdAt, table.id),
+  index('join_applications_owner_idx').on(table.userId, table.communityId),
   uniqueIndex('join_applications_id_email_unique').on(table.id, table.email),
   index('join_applications_list_idx').on(table.status, table.createdAt, table.id),
   index('join_applications_email_history_idx').on(table.email, table.createdAt, table.id),
+])
+export const communityMemberships = pgTable('community_memberships', {
+  userId: text('user_id').notNull().references(() => authUsers.id), communityId: text('community_id').notNull().references(() => communities.id),
+  applicationId: text('application_id').notNull().unique(), joinedAt: bigint('joined_at', { mode: 'number' }).notNull(),
+}, table => [
+  primaryKey({ columns: [table.userId, table.communityId] }),
+  foreignKey({ columns: [table.applicationId, table.userId, table.communityId], foreignColumns: [joinApplications.id, joinApplications.userId, joinApplications.communityId], name: 'community_memberships_application_owner_fk' }).onDelete('restrict'),
 ])
 export const joinApplicationEmailRegistry = pgTable('join_application_email_registry', {
   email: text('email').primaryKey().notNull(),
@@ -309,7 +382,7 @@ export const notificationEvents = pgTable('notification_events', {
     name: 'notification_events_content_id_fk' }).onDelete('restrict'),
   uniqueIndex('notification_events_dedupe_key_unique').on(table.dedupeKey),
   check('notification_events_event_version_check', sql`${table.eventVersion} = 1`),
-  check('notification_events_type_check', sql`${table.eventType} in ('community.announcement.published', 'community.announcement.withdrawn', 'personal.notice.issued')`),
+  check('notification_events_type_check', sql`${table.eventType} in ('community.announcement.published', 'community.announcement.withdrawn', 'personal.notice.issued', 'join.application.approved', 'join.application.rejected')`),
   check('notification_events_scope_check', sql`${table.scope} in ('community', 'personal')`),
   check('notification_events_status_check', sql`${table.projectionStatus} in ('pending', 'completed', 'failed')`),
   check('notification_events_attempts_check', sql`${table.projectionAttempts} >= 0`),

@@ -1,0 +1,260 @@
+/auth/registration/code:
+  post:
+    operationId: requestRegistrationCode
+    summary: requestRegistrationCode
+    tags:
+      - authentication
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../openapi.yaml#/components/schemas/RequestRegistrationCodeRequest
+    responses:
+      "202":
+        description: Successful operation; not cacheable.
+        headers:
+          X-Request-Id:
+            description: Server-generated request identifier.
+            required: true
+            schema:
+              type: string
+              minLength: 1
+          Cache-Control:
+            description: Authentication responses are not cacheable.
+            schema:
+              type: string
+              const: no-store
+            required: true
+          Referrer-Policy:
+            schema:
+              type: string
+              const: no-referrer
+            required: true
+          X-Content-Type-Options:
+            description: Disables MIME sniffing so stored bytes are never rendered inline.
+            schema:
+              type: string
+              const: nosniff
+            required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/RegistrationCodeRequested
+      "400":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "409":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "429":
+        $ref: ../openapi.yaml#/components/responses/CredentialRetryableErrorResponse
+      "503":
+        $ref: ../openapi.yaml#/components/responses/CredentialRetryableErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+/auth/registration/verify:
+  post:
+    operationId: verifyRegistrationCode
+    summary: verifyRegistrationCode
+    tags:
+      - authentication
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../openapi.yaml#/components/schemas/VerifyRegistrationCodeRequest
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers:
+          X-Request-Id:
+            description: Server-generated request identifier.
+            required: true
+            schema:
+              type: string
+              minLength: 1
+          Cache-Control:
+            description: Authentication responses are not cacheable.
+            schema:
+              type: string
+              const: no-store
+            required: true
+          Referrer-Policy:
+            schema:
+              type: string
+              const: no-referrer
+            required: true
+          X-Content-Type-Options:
+            description: Disables MIME sniffing so stored bytes are never rendered inline.
+            schema:
+              type: string
+              const: nosniff
+            required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/RegistrationGrant
+      "400":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "409":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "410":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "429":
+        $ref: ../openapi.yaml#/components/responses/CredentialRetryableErrorResponse
+      "503":
+        $ref: ../openapi.yaml#/components/responses/CredentialRetryableErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+/auth/registrations:
+  post:
+    operationId: completePublicRegistration
+    summary: completePublicRegistration
+    tags:
+      - authentication
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../openapi.yaml#/components/schemas/CompletePublicRegistrationRequest
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers:
+          X-Request-Id:
+            description: Server-generated request identifier.
+            required: true
+            schema:
+              type: string
+              minLength: 1
+          Cache-Control:
+            description: Authentication responses are not cacheable.
+            schema:
+              type: string
+              const: no-store
+            required: true
+          Referrer-Policy:
+            schema:
+              type: string
+              const: no-referrer
+            required: true
+          X-Content-Type-Options:
+            description: Disables MIME sniffing so stored bytes are never rendered inline.
+            schema:
+              type: string
+              const: nosniff
+            required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/RegistrationResult
+      "201":
+        description: Successful operation; not cacheable.
+        headers:
+          X-Request-Id:
+            description: Server-generated request identifier.
+            required: true
+            schema:
+              type: string
+              minLength: 1
+          Cache-Control:
+            description: Authentication responses are not cacheable.
+            schema:
+              type: string
+              const: no-store
+            required: true
+          Referrer-Policy:
+            schema:
+              type: string
+              const: no-referrer
+            required: true
+          X-Content-Type-Options:
+            description: Disables MIME sniffing so stored bytes are never rendered inline.
+            schema:
+              type: string
+              const: nosniff
+            required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/RegistrationResult
+      "400":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "409":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "410":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "429":
+        $ref: ../openapi.yaml#/components/responses/CredentialRetryableErrorResponse
+      "503":
+        $ref: ../openapi.yaml#/components/responses/CredentialRetryableErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+/auth/cfx/sign-in:
+  post:
+    operationId: signInWithCfx
+    summary: signInWithCfx
+    tags:
+      - authentication
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../openapi.yaml#/components/schemas/CfxSignInRequest
+    responses:
+      "200":
+        description: Successful operation; not cacheable.
+        headers:
+          X-Request-Id:
+            description: Server-generated request identifier.
+            required: true
+            schema:
+              type: string
+              minLength: 1
+          Cache-Control:
+            description: Authentication responses are not cacheable.
+            schema:
+              type: string
+              const: no-store
+            required: true
+          Referrer-Policy:
+            schema:
+              type: string
+              const: no-referrer
+            required: true
+          X-Content-Type-Options:
+            description: Disables MIME sniffing so stored bytes are never rendered inline.
+            schema:
+              type: string
+              const: nosniff
+            required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../openapi.yaml#/components/schemas/CfxSignInResult
+      "400":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "403":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "409":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "410":
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse
+      "429":
+        $ref: ../openapi.yaml#/components/responses/CredentialRetryableErrorResponse
+      "503":
+        $ref: ../openapi.yaml#/components/responses/CredentialRetryableErrorResponse
+      default:
+        $ref: ../openapi.yaml#/components/responses/CredentialErrorResponse

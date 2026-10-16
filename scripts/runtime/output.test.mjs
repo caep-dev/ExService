@@ -45,6 +45,35 @@ test('live logs use short time while persisted logs keep ISO time, with neither 
   assert.doesNotMatch(lines[0], /private-token|p@%|p%40%25|postgres:\/\//)
 })
 
+test('development registration mail is visible only in opted-in terminals and never retained', () => {
+  const mail = '[registration-mail:development] {"recipient":"synthetic@example.invalid","code":"001234"}'
+  for (const options of [
+    { isTTY: true, environment: { SERVER_REGISTRATION_MAIL_SIMULATOR: 'true' } },
+    { isTTY: false, environment: { SERVER_REGISTRATION_MAIL_SIMULATOR: 'true' } },
+    { isTTY: true, environment: {} },
+  ]) {
+    const { output, lines, retained } = capture(options)
+    output.log('server', mail, 'stderr')
+    assert.doesNotMatch(retained.join('\n'), /001234|synthetic@example\.invalid/)
+    assert.match(retained.join('\n'), /registration-mail:development/)
+    if (options.isTTY && options.environment.SERVER_REGISTRATION_MAIL_SIMULATOR === 'true') {
+      assert.match(lines.join('\n'), /001234/)
+    } else {
+      assert.doesNotMatch(lines.join('\n'), /001234|synthetic@example\.invalid/)
+    }
+  }
+})
+
+test('failed stages hide buffered development mail from redirected and retained output', async () => {
+  const { output, lines, retained } = capture({ environment: { SERVER_REGISTRATION_MAIL_SIMULATOR: 'true' } })
+  await assert.rejects(output.stage('server', async log => {
+    log('server', '[registration-mail:development] {"recipient":"synthetic@example.invalid","code":"001234"}', 'stderr')
+    throw new Error('Stage failed')
+  }))
+  assert.doesNotMatch(lines.join('\n'), /001234|synthetic@example\.invalid/)
+  assert.doesNotMatch(retained.join('\n'), /001234|synthetic@example\.invalid/)
+})
+
 test('errors show a readable reason, context and next step but hide untrusted exception messages', () => {
   const { output, lines, retained } = capture({ isTTY: true, environment: { DATABASE_PASSWORD: 'private-password' } })
   output.failure(new RuntimeError('DOCKER_UNAVAILABLE', { service: 'Docker', phase: '引擎连接失败',

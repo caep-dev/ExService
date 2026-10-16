@@ -1,18 +1,61 @@
 ﻿// @vitest-environment jsdom
-import { afterEach, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ExMessage, ExMessageContext } from '@exre/exui'
 import { JoinReviewPage } from '@web/src/pages/JoinReviewPage/index'
 import { ExAxiosError } from '@workspace/sdk/http/browser'
 import type { components } from '@workspace/api-client'
-const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))
-vi.mock('@web/src/api/client', () => ({ api: { GET: get, POST: post } }))
-const application: components['schemas']['JoinApplicationSummary'] = { id: 'a', email: 'member@example.com', nickname: '成员', qq: '001234', status: 'pending', createdAt: 1000, reviewedAt: null, reviewedByUserId: null, invitationStatus: null, deliveryStatus: null, applicationType: 'legacy' }
-afterEach(() => { cleanup(); get.mockReset(); post.mockReset(); vi.restoreAllMocks(); vi.useRealTimers(); vi.unstubAllGlobals() })
-const listOf = (items = [application], offset = 0, total = items.length) => ({ items, offset, total, limit: 20, serverTime: 1000 })
-const detailOf = (item = application) => ({ application: item, invitation: null, serverTime: 1000, formVersion: 0, form: null, attachments: [] })
+import { writeToken, clearBrowserSession } from '@web/src/auth/storage'
+const { get, post, access } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), access: vi.fn() }))
+vi.mock('@web/src/api/client', () => ({ api: { GET: (path: string, ...args: unknown[]) => path === '/auth/me/review-access' ? access(...args) : get(path, ...args), POST: post } }))
+const application: components['schemas']['JoinApplicationSummary'] = { id: 'a', email: 'member@example.com', nickname: '成员', qq: '001234', status: 'pending', createdAt: 1000, reviewedAt: null, reviewedByUserId: null, applicationType: 'new', communityId: 'rifling-911', applicantUserId: 'owner', legacyReadOnly: false, identitySnapshot: null, missingProviders: [] }
+beforeEach(() => { writeToken(localStorage, 'reviewer'); access.mockResolvedValue({ isPlatformAdmin: false, communities: [{ id: 'rifling-911', displayName: 'Rifling 911', requiresCfx: true, configRevision: 0 }] }) })
+afterEach(() => { cleanup(); clearBrowserSession(); get.mockReset(); post.mockReset(); access.mockReset(); vi.restoreAllMocks(); vi.useRealTimers(); vi.unstubAllGlobals() })
+const listOf = (items: components['schemas']['JoinApplicationSummary'][] = [application], offset = 0, total = items.length) => ({ items, offset, total, limit: 20, serverTime: 1000 })
+const detailOf = (item: components['schemas']['JoinApplicationSummary'] = application) => ({ application: item, serverTime: 1000, formVersion: 2, form: newForm, attachments: [] })
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done }); return { promise, resolve } }
+it('does not infer review permission from platform admin', async () => {
+  access.mockResolvedValue({ isPlatformAdmin: true, communities: [] })
+  render(<JoinReviewPage />)
+  expect(await screen.findByText('当前账号没有已授权的审核社区。')).toBeTruthy()
+  expect(get).not.toHaveBeenCalled()
+})
+it('discards a late list from another session and sends the replacement owner explicitly', async () => {
+  const old = deferred<ReturnType<typeof listOf>>()
+  get.mockReturnValueOnce(old.promise).mockResolvedValueOnce(listOf([{ ...application, nickname: '第二账号' }]))
+  render(<JoinReviewPage />)
+  await waitFor(() => expect(get).toHaveBeenCalledTimes(1))
+  act(() => writeToken(localStorage, 'second'))
+  expect(await screen.findByRole('button', { name: '查看 第二账号' })).toBeTruthy()
+  await act(async () => old.resolve(listOf([{ ...application, nickname: '旧账号私密' }])))
+  expect(screen.queryByText('旧账号私密')).toBeNull()
+  expect(get).toHaveBeenLastCalledWith('/admin/communities/{communityId}/applications', expect.objectContaining({ headers: { Authorization: 'Bearer second' } }))
+})
+it('switches authorized communities without displaying a late detail from the previous community', async () => {
+  const old = deferred<ReturnType<typeof detailOf>>()
+  access.mockResolvedValue({ isPlatformAdmin: false, communities: ['first', 'second'].map(id => ({ id, displayName: id, requiresCfx: false, configRevision: 0 })) })
+  get.mockImplementation((path: string) => path.endsWith('{applicationId}') ? old.promise : Promise.resolve(listOf()))
+  render(<JoinReviewPage />)
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: '查看 成员' }))
+  await user.click(screen.getByRole('button', { name: '关闭详情' }))
+  fireEvent.change(screen.getByLabelText('审核社区'), { target: { value: 'second' } })
+  await screen.findByRole('button', { name: '查看 成员' })
+  await act(async () => old.resolve(detailOf()))
+  expect(screen.queryByRole('dialog')).toBeNull()
+  expect(get).toHaveBeenLastCalledWith('/admin/communities/{communityId}/applications', expect.objectContaining({ params: expect.objectContaining({ path: { communityId: 'second' } }) }))
+})
+it('removes protected content on attachment permission denial and waits for explicit permission refresh', async () => {
+  const user = userEvent.setup()
+  get.mockImplementation((path: string) => path.endsWith('{attachmentId}') ? Promise.reject(new ExAxiosError('http', 'FORBIDDEN', 'private', { status: 403 })) : Promise.resolve(path.endsWith('{applicationId}') ? { ...detailOf(), attachments: [attachment] } : listOf()))
+  render(<JoinReviewPage />)
+  await user.click(await screen.findByRole('button', { name: '查看 成员' }))
+  await user.click(await screen.findByRole('button', { name: '下载 证明资料.svg' }))
+  expect(await screen.findByText('无法读取审核权限，请重试。')).toBeTruthy()
+  expect(screen.queryByRole('dialog')).toBeNull(); expect(screen.queryByText('member@example.com')).toBeNull()
+  expect(access).toHaveBeenCalledTimes(1)
+})
 it('shows approval feedback through the ExUI message host', async () => {
   const user = userEvent.setup()
   vi.stubGlobal('matchMedia', () => ({ matches: false, addEventListener() {}, removeEventListener() {} }))
@@ -20,8 +63,8 @@ it('shows approval feedback through the ExUI message host', async () => {
   post.mockResolvedValue(detailOf({ ...application, status: 'approved' }))
   render(<><ExMessageContext /><JoinReviewPage /></>)
   await user.click(await screen.findByRole('button', { name: '查看 成员' }))
-  await user.click(await screen.findByRole('button', { name: '同意并发送邀请' }))
-  expect(await screen.findByText('审核与邀请状态已更新')).toBeTruthy()
+  await user.click(await screen.findByRole('button', { name: '同意申请' }))
+  expect(await screen.findByText('申请已通过，成员资格已更新')).toBeTruthy()
 })
 
 it('opens fresh detail in two tabs and restores focus without changing the list filter', async () => {
@@ -32,7 +75,7 @@ it('opens fresh detail in two tabs and restores focus without changing the list 
   await user.click(trigger)
   expect(await screen.findByRole('dialog', { name: '申请详情' })).toBeTruthy()
   expect(screen.getByRole('tab', { name: '申请资料' }).getAttribute('aria-selected')).toBe('true')
-  await user.click(screen.getByRole('tab', { name: '审核与邀请' }))
+  await user.click(screen.getByRole('tab', { name: '审核记录' }))
   expect(screen.getByText('审核人').nextElementSibling?.textContent).toBe('未记录')
   await user.click(screen.getByRole('button', { name: '关闭详情' }))
   expect(document.activeElement).toBe(trigger)
@@ -46,10 +89,10 @@ it('resets pagination when filtering and rejects a late page response', async ()
   render(<JoinReviewPage />)
   await screen.findByRole('button', { name: '查看 成员' })
   await user.click(screen.getByRole('button', { name: '下一页' }))
-  expect(get).toHaveBeenLastCalledWith('/admin/join/applications', { params: { query: { view: 'pending', offset: '20', limit: '20' } }, alert: false })
+  expect(get).toHaveBeenLastCalledWith('/admin/communities/{communityId}/applications', { params: { path: { communityId: 'rifling-911' }, query: { status: 'pending', source: 'all', offset: 20, limit: 20 } }, headers: { Authorization: 'Bearer reviewer' }, alert: false })
   await user.click(screen.getByRole('tab', { name: '全部申请' }))
   expect(await screen.findByRole('button', { name: '查看 新成员' })).toBeTruthy()
-  expect(get).toHaveBeenLastCalledWith('/admin/join/applications', { params: { query: { view: 'all', offset: '0', limit: '20' } }, alert: false })
+  expect(get).toHaveBeenLastCalledWith('/admin/communities/{communityId}/applications', { params: { path: { communityId: 'rifling-911' }, query: { status: undefined, source: 'all', offset: 0, limit: 20 } }, headers: { Authorization: 'Bearer reviewer' }, alert: false })
   await act(async () => { late.resolve(listOf([{ ...application, nickname: '过时成员' }], 20, 21)) })
   expect(screen.queryByRole('button', { name: '查看 过时成员' })).toBeNull()
   expect(screen.getByText('第 1 页，共 1 条')).toBeTruthy()
@@ -73,12 +116,12 @@ it('keeps a submitted approval running after close and refreshes the list withou
   post.mockReturnValue(next.promise)
   render(<JoinReviewPage />)
   await user.click(await screen.findByRole('button', { name: '查看 成员' }))
-  await user.click(await screen.findByRole('button', { name: '同意并发送邀请' }))
+  await user.click(await screen.findByRole('button', { name: '同意申请' }))
   expect((screen.getByRole('button', { name: '拒绝申请' }) as HTMLButtonElement).disabled).toBe(true)
   await user.click(screen.getByRole('button', { name: '关闭详情' }))
   await act(async () => { next.resolve(detailOf({ ...application, status: 'approved' })) })
-  expect(post).toHaveBeenCalledExactlyOnceWith('/admin/join/applications/{applicationId}/approve', { params: { path: { applicationId: 'a' } }, body: {}, alert: false })
-  expect(get.mock.calls.filter(([path]) => path === '/admin/join/applications')).toHaveLength(2)
+  expect(post).toHaveBeenCalledExactlyOnceWith('/admin/communities/{communityId}/applications/{applicationId}/approve', { params: { path: { communityId: 'rifling-911', applicationId: 'a' } }, body: {}, headers: { Authorization: 'Bearer reviewer' }, alert: false })
+  expect(get.mock.calls.filter(([path]) => path === '/admin/communities/{communityId}/applications')).toHaveLength(2)
   expect(notify).not.toHaveBeenCalled()
   expect(screen.queryByRole('dialog')).toBeNull()
 })
@@ -90,7 +133,7 @@ it('restores focus to refresh when approval removes the original pending row', a
   post.mockResolvedValue(detailOf({ ...application, status: 'approved' }))
   render(<JoinReviewPage />)
   await user.click(await screen.findByRole('button', { name: '查看 成员' }))
-  await user.click(await screen.findByRole('button', { name: '同意并发送邀请' }))
+  await user.click(await screen.findByRole('button', { name: '同意申请' }))
   await waitFor(() => expect(screen.queryByRole('button', { name: '查看 成员', hidden: true })).toBeNull())
   await user.click(screen.getByRole('button', { name: '关闭详情' }))
   expect(document.activeElement).toBe(screen.getByRole('button', { name: '刷新列表' }))
@@ -98,18 +141,18 @@ it('restores focus to refresh when approval removes the original pending row', a
 
 it('refreshes conflicted detail and presents delivery failure without changing approval facts', async () => {
   const user = userEvent.setup()
-  const approved = { ...application, status: 'approved' as const, deliveryStatus: 'failed' as const }
+  const approved = { ...application, status: 'approved' as const, deliveryStatus: 'failed' as const, legacyReadOnly: true as const, invitationStatus: null }
   get.mockImplementation((path: string) => Promise.resolve(path.endsWith('{applicationId}') ? detailOf() : listOf()))
   post.mockRejectedValue(new ExAxiosError('http', 'JOIN_STATE_CONFLICT', 'safe', { status: 409 }))
   render(<JoinReviewPage />)
   await user.click(await screen.findByRole('button', { name: '查看 成员' }))
-  await screen.findByRole('button', { name: '同意并发送邀请' })
+  await screen.findByRole('button', { name: '同意申请' })
   get.mockImplementation((path: string) => Promise.resolve(path.endsWith('{applicationId}') ? { ...detailOf(approved), invitation: { status: 'active', resendAvailableAt: 1000, expiresAt: 100000, latestDelivery: { status: 'failed' } } } : listOf([])))
   await user.click(screen.getByRole('button', { name: '拒绝申请' }))
-  await user.click(screen.getByRole('tab', { name: '审核与邀请' }))
-  expect(await screen.findByText('邀请投递失败，审批已保留。冷却结束后可重新发送。')).toBeTruthy()
+  await user.click(screen.getByRole('tab', { name: '审核记录' }))
+  expect(await screen.findByText('历史邀请投递失败，原审批事实保留；旧邀请流程已结束。')).toBeTruthy()
   expect(screen.getByText('审核状态').nextElementSibling?.textContent).toBe('已同意')
-  expect(screen.getByRole('button', { name: '重新发送邀请' })).toBeTruthy()
+  expect(screen.queryByRole('button', { name: '重新发送邀请' })).toBeNull()
   expect(get.mock.calls.filter(([path]) => path.endsWith('{applicationId}'))).toHaveLength(2)
 })
 
@@ -120,11 +163,11 @@ it('retains pending approval on inherited cooldown 429 and enables retry after t
   post.mockRejectedValue(new ExAxiosError('http', 'CODE_RESEND_TOO_SOON', 'safe', { status: 429, retryAfterSeconds: 2 }))
   render(<JoinReviewPage />)
   await user.click(await screen.findByRole('button', { name: '查看 成员' }))
-  await user.click(await screen.findByRole('button', { name: '同意并发送邀请' }))
+  await user.click(await screen.findByRole('button', { name: '同意申请' }))
   expect((screen.getByRole('button', { name: '2 秒后同意' }) as HTMLButtonElement).disabled).toBe(true)
   expect((screen.getByRole('button', { name: '拒绝申请' }) as HTMLButtonElement).disabled).toBe(false)
   await act(async () => { vi.advanceTimersByTime(3000) })
-  expect((screen.getByRole('button', { name: '同意并发送邀请' }) as HTMLButtonElement).disabled).toBe(false)
+  expect((screen.getByRole('button', { name: '同意申请' }) as HTMLButtonElement).disabled).toBe(false)
   expect(post).toHaveBeenCalledTimes(1)
 })
 
@@ -139,6 +182,31 @@ const experiencedForm: components['schemas']['JoinExperiencedForm'] = {
   commitments: { informationAccurate: true },
 }
 const attachment = { id: 'proof-id', originalName: '证明资料.svg', extension: 'svg', byteLength: 20, sha256: 'a'.repeat(64), ordinal: 0 }
+it.each([newForm, experiencedForm])('keeps historical full $applicationType applications read-only with real invitation history', async form => {
+  const user = userEvent.setup()
+  const detail = { ...detailOf(), application: { ...application, applicationType: form.applicationType, legacyReadOnly: true }, formVersion: 1, form, invitation: { status: 'expired', expiresAt: 1000, completedAt: null, latestDelivery: { status: 'sent' } } }
+  get.mockImplementation((path: string) => Promise.resolve(path.endsWith('{applicationId}') ? detail : listOf()))
+  render(<JoinReviewPage />)
+  await user.click(await screen.findByRole('button', { name: '查看 成员' }))
+  expect(await screen.findByText(/只读历史申请/)).toBeTruthy()
+  expect(screen.queryByRole('button', { name: '同意申请' })).toBeNull()
+  expect(screen.queryByRole('button', { name: '拒绝申请' })).toBeNull()
+  await user.click(screen.getByRole('tab', { name: '审核记录' }))
+  expect(screen.getByText('历史邀请状态').nextElementSibling?.textContent).toBe('已过期')
+  expect(screen.getByText('历史最近投递').nextElementSibling?.textContent).toBe('已发送')
+  expect(post).not.toHaveBeenCalled()
+})
+it('does not download an old owner attachment after the session changes', async () => {
+  const user = userEvent.setup(), old = deferred<Blob>(), create = vi.fn()
+  vi.stubGlobal('URL', class extends URL { static override createObjectURL = create; static override revokeObjectURL = vi.fn() })
+  get.mockImplementation((path: string) => path.endsWith('{attachmentId}') ? old.promise : Promise.resolve(path.endsWith('{applicationId}') ? { ...detailOf(), attachments: [attachment] } : listOf()))
+  render(<JoinReviewPage />)
+  await user.click(await screen.findByRole('button', { name: '查看 成员' }))
+  await user.click(await screen.findByRole('button', { name: '下载 证明资料.svg' }))
+  act(() => writeToken(localStorage, 'replacement'))
+  await act(async () => old.resolve(new Blob(['private'])))
+  expect(create).not.toHaveBeenCalled(); expect(screen.queryByRole('dialog')).toBeNull()
+})
 it.each([newForm, experiencedForm])('shows every full $applicationType answer and only its commitments as text', async form => {
   const user = userEvent.setup()
   const detail = { ...detailOf(), application: { ...application, applicationType: form.applicationType }, formVersion: 1, form, attachments: Array.from({ length: 5 }, (_, index) => ({ ...attachment, id: `proof-${index}`, originalName: `附件${index}.txt`, ordinal: index })) }
@@ -156,7 +224,7 @@ it.each([newForm, experiencedForm])('shows every full $applicationType answer an
 })
 it('marks legacy details without inventing answers or commitments', async () => {
   const user = userEvent.setup()
-  get.mockImplementation((path: string) => Promise.resolve(path.endsWith('{applicationId}') ? detailOf() : listOf()))
+  get.mockImplementation((path: string) => Promise.resolve(path.endsWith('{applicationId}') ? { ...detailOf(), application: { ...application, legacyReadOnly: true, applicationType: 'legacy' }, formVersion: 0, form: null, invitation: null } : listOf()))
   render(<JoinReviewPage />)
   await user.click(await screen.findByRole('button', { name: '查看 成员' }))
   expect(await screen.findByText('历史简版申请：仅保留当时提交的联系资料，没有完整回答、附件或承诺记录。')).toBeTruthy()
@@ -172,7 +240,7 @@ it('downloads through the declared blob operation and releases the temporary URL
   render(<JoinReviewPage />)
   await user.click(await screen.findByRole('button', { name: '查看 成员' }))
   await user.click(await screen.findByRole('button', { name: '下载 证明资料.svg' }))
-  expect(get).toHaveBeenLastCalledWith('/admin/join/applications/{applicationId}/attachments/{attachmentId}', { params: { path: { applicationId: 'a', attachmentId: 'proof-id' } }, responseType: 'blob', alert: false })
+  expect(get).toHaveBeenLastCalledWith('/admin/communities/{communityId}/applications/{applicationId}/attachments/{attachmentId}', { params: { path: { communityId: 'rifling-911', applicationId: 'a', attachmentId: 'proof-id' } }, responseType: 'blob', headers: { Authorization: 'Bearer reviewer' }, alert: false })
   expect(create).toHaveBeenCalledExactlyOnceWith(blob)
   expect(click).toHaveBeenCalledTimes(1)
   await waitFor(() => expect(revoke).toHaveBeenCalledExactlyOnceWith('blob:temporary-proof'))
@@ -203,7 +271,7 @@ it('renders list and detail request errors and permits explicit reloads', async 
   await user.click(await screen.findByRole('button', { name: '查看 成员' }))
   expect(await screen.findByText('无法加载申请详情，请重试')).toBeTruthy()
   await user.click(screen.getByRole('button', { name: '刷新详情' }))
-  expect(await screen.findByText('历史简版申请：仅保留当时提交的联系资料，没有完整回答、附件或承诺记录。')).toBeTruthy()
+  expect(await screen.findByText('角色扮演')).toBeTruthy()
   expect(screen.queryByText('internal path')).toBeNull()
 })
 it('releases a scheduled download URL when the page unmounts before its cleanup timer', async () => {

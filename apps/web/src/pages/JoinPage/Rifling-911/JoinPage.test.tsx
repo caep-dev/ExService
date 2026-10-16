@@ -13,8 +13,10 @@ import { MemoryRouter } from "react-router";
 import { JoinPage } from "@web/src/pages/JoinPage/Rifling-911/index";
 import { ExMessage } from "@exre/exui";
 import { ExAxiosError } from "@workspace/sdk/http/browser";
-const post = vi.hoisted(() => vi.fn());
-vi.mock("@web/src/api/client", () => ({ api: { POST: post } }));
+import { writeToken, clearBrowserSession } from "@web/src/auth/storage";
+const { post, get } = vi.hoisted(() => ({ post: vi.fn(), get: vi.fn() }));
+vi.mock("@web/src/api/client", () => ({ api: { POST: post, GET: get } }));
+vi.mock("@web/src/join/CommunityAuthentication", () => ({ CommunityAuthentication: ({ onSessionCreated }: { onSessionCreated: (token: string) => void }) => <button onClick={() => { writeToken(localStorage, "new-owner"); onSessionCreated("new-owner") }}>完成登录</button> }));
 vi.mock("@web/src/join/hero-images", () => ({
   getJoinHeroImages: () => [
     "/images/heros/join/rifling-911/465563.jpg",
@@ -37,6 +39,8 @@ async function choose(
   await user.click(await screen.findByRole("option", { name: option }));
 }
 beforeEach(() => {
+  get.mockImplementation((path: string) => Promise.resolve(path === "/auth/me" ? { id: "owner", email: "account@example.com", nickname: "账户名字" } : path === "/communities/{communityId}" ? { id: "rifling-911", displayName: "Rifling 911", requiresCfx: false, configRevision: 0 } : { communityId: "rifling-911", application: null, membership: null, requiredProviders: [], missingProviders: [], requirementsMet: true, websiteReady: false }));
+  writeToken(localStorage, "owner");
   vi.stubGlobal(
     "matchMedia",
     vi.fn(() => ({
@@ -56,7 +60,9 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  clearBrowserSession();
   post.mockReset();
+  get.mockReset();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -70,6 +76,35 @@ function deferred<T>() {
 function change(label: string | RegExp, value: string) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 }
+it.each(['pending', 'approved', 'rejected'])('closes both application entrances for an existing %s application', async status => {
+  const original = get.getMockImplementation()!
+  get.mockImplementation((path: string, ...args: unknown[]) => path === '/auth/me/communities/{communityId}' ? Promise.resolve({ communityId: 'rifling-911', application: { id: 'a', status, createdAt: 1, reviewedAt: null }, membership: null, requiredProviders: [], missingProviders: [], requirementsMet: true, websiteReady: false }) : original(path, ...args))
+  render(<MemoryRouter><JoinPage /></MemoryRouter>)
+  expect(await screen.findByText('本账号已有申请，请查看本人结果；不能重新提交。')).toBeTruthy()
+  for (const name of ['新玩家申请', '调转申请']) expect((screen.getByRole('button', { name }) as HTMLButtonElement).disabled).toBe(true)
+  expect(post).not.toHaveBeenCalled()
+})
+it('preserves an anonymous draft through join-origin login and clears it on owner replacement', async () => {
+  clearBrowserSession()
+  render(<MemoryRouter><JoinPage /></MemoryRouter>)
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('button', { name: '新玩家申请' }))
+  change('QQ 号码', '12345678')
+  await user.click(screen.getByRole('button', { name: '登录或注册后继续申请' }))
+  await user.click(screen.getByRole('button', { name: '完成登录' }))
+  expect((screen.getByLabelText('QQ 号码') as HTMLInputElement).value).toBe('12345678')
+  expect(await screen.findByText('account@example.com')).toBeTruthy()
+  act(() => writeToken(localStorage, 'replacement'))
+  expect(screen.queryByRole('dialog')).toBeNull()
+  await user.click(screen.getByRole('button', { name: '新玩家申请' }))
+  expect((screen.getByLabelText('QQ 号码') as HTMLInputElement).value).toBe('')
+  change('QQ 号码', '87654321')
+  act(() => clearBrowserSession())
+  expect(screen.queryByRole('dialog')).toBeNull()
+  await user.click(screen.getByRole('button', { name: '新玩家申请' }))
+  expect((screen.getByLabelText('QQ 号码') as HTMLInputElement).value).toBe('')
+  expect(post).not.toHaveBeenCalled()
+})
 it("cycles through the local hero images when the hero is clicked", async () => {
   render(
     <MemoryRouter>
@@ -166,8 +201,6 @@ async function fill(
       name: type === "new" ? "新玩家申请" : "调转申请",
     }),
   );
-  change("邮箱", "Member@example.com");
-  change(type === "new" ? "你的名字" : "IC 名字", "成员");
   change("QQ 号码", "001234");
   await user.click(screen.getByRole("button", { name: /继续|检查申请/ }));
   expect(screen.getByRole("button", { name: "出生日期" }).textContent).toContain("2000-01-01");
@@ -225,21 +258,21 @@ it("retains dismissed drafts in memory and isolates the two application types", 
   ).toBe("/join/result");
   expect(screen.getByRole("heading", { name: "申请须知" })).toBeTruthy();
   await user.click(trigger);
-  change("邮箱", "draft@example.com");
+  change("QQ 号码", "1234567");
   await user.click(screen.getByRole("button", { name: "关闭申请" }));
   expect(document.activeElement).toBe(trigger);
   await user.click(screen.getByRole("button", { name: "调转申请" }));
-  expect((screen.getByLabelText("邮箱") as HTMLInputElement).value).toBe("");
-  change("邮箱", "transfer@example.com");
+  expect((screen.getByLabelText("QQ 号码") as HTMLInputElement).value).toBe("");
+  change("QQ 号码", "9876543");
   await user.click(screen.getByRole("button", { name: "关闭申请" }));
   await user.click(trigger);
-  expect((screen.getByLabelText("邮箱") as HTMLInputElement).value).toBe(
-    "draft@example.com",
+  expect((screen.getByLabelText("QQ 号码") as HTMLInputElement).value).toBe(
+    "1234567",
   );
   await user.click(screen.getByRole("button", { name: "关闭申请" }));
   await user.click(screen.getByRole("button", { name: "调转申请" }));
-  expect((screen.getByLabelText("邮箱") as HTMLInputElement).value).toBe(
-    "transfer@example.com",
+  expect((screen.getByLabelText("QQ 号码") as HTMLInputElement).value).toBe(
+    "9876543",
   );
   expect(post).not.toHaveBeenCalled();
 });
@@ -271,7 +304,7 @@ it("restores the dismissed step and attached files, but releases drafts on page 
     </MemoryRouter>,
   );
   await user.click(screen.getByRole("button", { name: "调转申请" }));
-  expect((screen.getByLabelText("邮箱") as HTMLInputElement).value).toBe("");
+  expect((screen.getByLabelText("QQ 号码") as HTMLInputElement).value).toBe("");
   expect(post).not.toHaveBeenCalled();
 });
 it("submits a complete new payload only on confirmation and waits for server acknowledgement", async () => {
@@ -294,11 +327,12 @@ it("submits a complete new payload only on confirmation and waits for server ack
   await user.keyboard("{Escape}");
   expect(screen.getByRole("dialog")).toBeTruthy();
   const [path, options] = post.mock.calls[0]!;
-  expect(path).toBe("/join/applications");
+  expect(path).toBe("/communities/{communityId}/applications");
   const parts = options.body as FormData;
   const encoded = await new Promise<string>(resolve => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.readAsText(parts.get('application') as Blob) });
   const application = JSON.parse(encoded);
-  expect(application.email).toBe("member@example.com");
+  expect(application).not.toHaveProperty("email");
+  expect(application).not.toHaveProperty("nickname");
   expect(application.form).toMatchObject({
     applicationType: "new",
     birthDate: "2000-01-01",
@@ -315,7 +349,7 @@ it("submits a complete new payload only on confirmation and waits for server ack
   expect(applicationPart).toBeInstanceOf(File);
   expect((applicationPart as File).name).toBe("application.json");
   expect((applicationPart as File).type).toBe("application/json");
-  expect(options.headers).toBeUndefined();
+  expect(options.headers).toEqual({ Authorization: "Bearer owner" });
   await act(async () => {
     next.resolve({ status: "received" });
   });
@@ -327,9 +361,11 @@ it("submits a complete new payload only on confirmation and waits for server ack
   expect(
     result.queryByRole("button", { name: "关闭" }),
   ).toBeNull();
-  expect(result.getByText(/进行面试后，社区会确认申请结果/)).toBeTruthy();
-  expect(result.getByText(/请留意申请邮箱/)).toBeTruthy();
+  expect(result.getByText(/面试和学院安排由社区另行通知/)).toBeTruthy();
+  expect(result.getByText(/请留意站内通知并在本人结果页查询/)).toBeTruthy();
   expect(result.getByRole("link", { name: "查询申请结果" }).getAttribute("href")).toBe("/join/result");
+  await user.keyboard("{Escape}");
+  expect((screen.getByRole("button", { name: "新玩家申请" }) as HTMLButtonElement).disabled).toBe(true);
 });
 it("retains experienced values and the same File on a failed submit and successful retry", async () => {
   vi.spyOn(ExMessage, "info").mockReturnValue("info");
@@ -371,11 +407,10 @@ it("retains experienced values and the same File on a failed submit and successf
 it.each([
   [
     "JOIN_APPLICATION_EXISTS",
-    "该邮箱已有申请，不能重复提交",
+    "本账号已提交过该社区申请，不能重复提交",
     "查询已有申请结果",
     "/join/result",
   ],
-  ["EMAIL_IN_USE", "该邮箱已有正式账号，请前往登录", "前往登录", "/login"],
 ])(
   "handles %s as a conflict without claiming receipt",
   async (code, message, link, href) => {
@@ -391,9 +426,9 @@ it.each([
     expect(screen.getByRole("link", { name: link }).getAttribute("href")).toBe(
       href,
     );
-    expect((screen.getByLabelText("邮箱") as HTMLInputElement).value).toBe(
-      "Member@example.com",
-    );
+    await user.click(screen.getByRole("button", { name: "返回修改" }));
+    for (let step = 0; step < 3; step++) await user.click(screen.getByRole("button", { name: "上一步" }));
+    expect((screen.getByLabelText("QQ 号码") as HTMLInputElement).value).toBe("001234");
     expect(screen.queryByRole("heading", { name: "申请已收到" })).toBeNull();
   },
 );

@@ -1,9 +1,9 @@
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { migrate } from 'drizzle-orm/node-postgres/migrator'
+import { readMigrationFiles } from 'drizzle-orm/migrator'
+import { assertPublicRegistrationHistory } from './public-registration-inventory.js'
 import { createVerifiedPool, type DatabaseOptions } from '@server/src/db/client.js'
-import { APPLICATION_TABLES, BASELINE_APPLICATION_TABLES, assertDatabaseReady } from '@server/src/db/schema-check.js'
+import { APPLICATION_TABLES, BASELINE_APPLICATION_TABLES, NOTIFICATION_APPLICATION_TABLES, SUPPORT_APPLICATION_TABLES, assertDatabaseReady } from '@server/src/db/schema-check.js'
 
 const MIGRATIONS_FOLDER = resolve(dirname(fileURLToPath(import.meta.url)), '../../drizzle')
 const SAFE_IDENTIFIER = /^[a-z_][a-z0-9_]*$/
@@ -12,8 +12,9 @@ const SAFE_IDENTIFIER = /^[a-z_][a-z0-9_]*$/
 const COMPLETE_TABLE_SETS = [
   BASELINE_APPLICATION_TABLES, // 0000
   [...BASELINE_APPLICATION_TABLES, 'auth_oidc_flows', 'auth_oidc_bindings', 'auth_identity_outbox'], // 0001
-  APPLICATION_TABLES.filter(table => !table.startsWith('support_feedback_')), // 0002
-  APPLICATION_TABLES,
+  NOTIFICATION_APPLICATION_TABLES, // 0002
+  SUPPORT_APPLICATION_TABLES, // 0003 through 0005
+  APPLICATION_TABLES, // 0006
 ]
 
 export interface MigrationOptions extends DatabaseOptions { migrationsSchema?: string }
@@ -55,11 +56,31 @@ export async function runMigrations(options: MigrationOptions = {}): Promise<voi
         throw new Error('migration schema 含非本应用对象；拒绝迁移。')
       }
     }
-    await migrate(drizzle(pool), { migrationsFolder: MIGRATIONS_FOLDER, migrationsSchema })
-    const db = { query: async <Row extends Record<string, unknown>>(sql: string, values: readonly unknown[] = []) => {
-      const result = await pool.query<Row>(sql, [...values])
-      return { rows: result.rows, rowCount: result.rowCount }
-    } }
-    await assertDatabaseReady(db, schema, migrationsSchema)
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
+      await client.query(`CREATE SCHEMA IF NOT EXISTS "${migrationsSchema}"`)
+      await client.query(`CREATE TABLE IF NOT EXISTS "${migrationsSchema}".__drizzle_migrations (id serial PRIMARY KEY, hash text NOT NULL, created_at bigint)`)
+      await client.query(`LOCK TABLE "${migrationsSchema}".__drizzle_migrations IN ACCESS EXCLUSIVE MODE`)
+      const applied = await client.query<{ hash: string; created_at: string }>(`SELECT hash,created_at FROM "${migrationsSchema}".__drizzle_migrations ORDER BY created_at`)
+      const migrations = readMigrationFiles({ migrationsFolder: MIGRATIONS_FOLDER })
+      if (applied.rows.length > migrations.length || applied.rows.some((row, index) => row.hash !== migrations[index]?.hash || Number(row.created_at) !== migrations[index]?.folderMillis)) throw new Error('Server migration journal mismatch; refusing upgrade.')
+      for (const [index, migration] of migrations.entries()) {
+        if (index < applied.rows.length) continue
+        if (index === 6) {
+          // Freeze all source facts before checking, then validate and write using
+          // this same connection and transaction. Inventory cannot authorize writes.
+          for (const table of SUPPORT_APPLICATION_TABLES) await client.query(`LOCK TABLE "${table}" IN SHARE ROW EXCLUSIVE MODE`)
+          await assertPublicRegistrationHistory(client)
+        }
+        for (const statement of migration.sql) await client.query(statement)
+        await client.query(`INSERT INTO "${migrationsSchema}".__drizzle_migrations(hash,created_at) VALUES ($1,$2)`, [migration.hash, migration.folderMillis])
+      }
+      await assertDatabaseReady(client, schema, migrationsSchema)
+      await client.query('COMMIT')
+    } catch (error) {
+      await client.query('ROLLBACK')
+      throw error
+    } finally { client.release() }
   } finally { await pool.end() }
 }

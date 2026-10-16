@@ -17,7 +17,7 @@ declare const options: CreateAppOptions
 
 const token: Promise<ApiJsonResult<'login'>> = app.authServices.login(loginRequest.body)
 const services: AuthPluginOptions = { authServices: options.authServices }
-const join: JoinPluginOptions = { joinServices: options.joinServices, invitationServices: options.invitationServices }
+const join: JoinPluginOptions = { joinServices: options.joinServices }
 const optionalIdentity: IdentityPluginOptions = {}
 const namedIdentity: IdentityPluginOptions = { oidcServices: options.oidcServices }
 const profile: ProfilePluginOptions = { profileServices: options.profileServices }
@@ -38,8 +38,10 @@ const missing: AuthPluginOptions = {}
 const wrong: AuthPluginOptions = { authServices: options.profileServices }
 // @ts-expect-error the previous generic parameter is not a compatibility branch
 const previous: AuthPluginOptions = { services: options.authServices }
-// @ts-expect-error both join service fields are required
-const incompleteJoin: JoinPluginOptions = { joinServices: options.joinServices }
+// @ts-expect-error the account-owned join service is required
+const incompleteJoin: JoinPluginOptions = {}
+// @ts-expect-error invitation services have been retired from runtime
+app.invitationServices
 // @ts-expect-error safe diagnostics only accept the known service field names
 requireBusinessServices('business-auth', { arbitrarySecret: undefined })
 void [previous, incompleteJoin]

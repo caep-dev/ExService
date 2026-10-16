@@ -152,6 +152,7 @@ async function setup() {
   }
   probe('/probe/unknown-500', new Error('secret postgres://user:pass@host/exre leaked'))
   probe('/probe/business-409', new AuthError('JOIN_APPLICATION_EXISTS'))
+  probe('/probe/business-404', new AuthError('JOIN_ATTACHMENT_NOT_FOUND'))
   probe('/probe/rate-limited', new AuthError('JOIN_RATE_LIMITED', { retryAfterSeconds: 7 }))
   probe('/probe/nested-409', Object.assign(new Error('wrapper'), { errors: [new AuthError('JOIN_STATE_CONFLICT')] }))
   probe('/probe/declared-418', Object.assign(new Error('teapot'), { code: 'BAD_REQUEST', statusCode: 418, publicMessage: 'Fixed public text.' }))
@@ -210,7 +211,7 @@ describe('shared safe error mapping', () => {
 
   it('keeps the bearer session rejection byte-identical', () => runGolden('session-invalid-401', '/api/auth/me', 'GET'))
 
-  it('keeps business not-found codes byte-identical', () => runGolden('business-404', '/api/admin/join/applications/20000000-0000-4000-8000-999999999999/attachments/20000000-0000-4000-8000-999999999999', 'GET'))
+  it('keeps business not-found codes byte-identical', () => runGolden('business-404', '/probe/business-404', 'GET'))
 
   it('keeps unknown 500 byte-identical without leaking the original message', () => runGolden('unknown-500', '/probe/unknown-500', 'GET'))
 

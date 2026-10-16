@@ -1,38 +1,87 @@
-import { beforeAll, expect, it } from 'vitest'
-import { openDatabase } from '@server/src/db/client'
-import { InvitationService } from '@server/src/domains/join/invitations/service'
-import { JoinService } from '@server/src/domains/join/applications/service'
-import { experiencedJoinApplication, newJoinApplication } from '@tests/helpers/auth'
-import { isolatedPostgres } from '@tests/helpers/postgres'
-
-let fixture: Awaited<ReturnType<typeof isolatedPostgres>>
-beforeAll(async () => {
-  fixture = await isolatedPostgres()
-}, 90_000)
-
-it('arbitrates one lifetime email across two independent PostgreSQL connection pools and categories', async () => {
-  const contender = await openDatabase({ connectionString: fixture.connectionString, searchPath: fixture.schema })
+﻿import { expect, it, vi } from 'vitest'
+import { joinActor, joinSnapshot } from '../helpers/auth'
+import { setup } from './fixture'
+function deferred() {
+  let resolve!: () => void
+  const promise = new Promise<void>((r) => (resolve = r))
+  return { promise, resolve }
+}
+async function waiting(f: Awaited<ReturnType<typeof setup>>) {
+  await vi.waitFor(async () => {
+    expect(
+      (
+        await f.db.query<{ n: number }>(
+          "SELECT count(*) AS n FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE 'SELECT id FROM auth_users%'",
+        )
+      ).rows[0]!.n,
+    ).toBeGreaterThan(0)
+  })
+}
+it('holds actual approval locks until notice commit and makes reviewer revocation wait', async () => {
+  const f = await setup(),
+    admin = await joinActor(f, 'admin@example.com')
+  await f.db.query(
+    "INSERT INTO community_group_memberships(user_id,group_code) VALUES($1,'admin')",
+    [admin.id],
+  )
+  await f.submit(f.input)
+  const id = await f.id()
+  const release = deferred(),
+    entered = deferred(),
+    original = f.notifications.producer.publishInside.bind(f.notifications.producer)
+  const spy = vi
+    .spyOn(f.notifications.producer, 'publishInside')
+    .mockImplementation(async (...args) => {
+      const result = await original(...args)
+      entered.resolve()
+      await release.promise
+      return result
+    })
+  const decision = f.approve(id)
+  await entered.promise
+  const revoke = f.communityServices.revokeReviewer(admin.session, 'rifling-911', f.reviewer.id)
   try {
-    let nextId = 0
-    const join = (db: typeof contender) => new JoinService(
-      new InvitationService({ db, codeHmacKey: Buffer.alloc(32), now: () => 1_800_000_000_000 }),
-      () => `20000000-0000-4000-8000-${String(++nextId).padStart(12, '0')}`)
-    const results = await Promise.allSettled([
-      join(fixture.db).submit(newJoinApplication(' RACE@EXAMPLE.COM ')),
-      join(contender).submit(experiencedJoinApplication('race@example.com')),
-    ])
-    expect(results.filter(result => result.status === 'fulfilled')).toHaveLength(1)
-    expect(results.filter(result => result.status === 'rejected')).toMatchObject([
-      { reason: { code: 'JOIN_APPLICATION_EXISTS' } },
-    ])
-    for (const table of ['join_applications', 'join_application_email_registry', 'join_application_forms']) {
-      expect((await fixture.db.query<{ n: number }>(`SELECT count(*)::integer AS n FROM ${table}`)).rows[0]?.n).toBe(1)
-    }
-    const { rows } = await fixture.db.query<{ form_version: number; version: number }>(
-      'SELECT a.form_version, f.version FROM join_applications a JOIN join_application_forms f ON f.application_id = a.id')
-    expect(rows).toEqual([{ form_version: 1, version: 1 }])
+    await waiting(f)
   } finally {
-    await contender.close()
-    await fixture.close()
+    release.resolve()
+    await decision
+    await revoke
+    spy.mockRestore()
   }
-}, 30_000)
+  expect((await f.db.query('SELECT * FROM community_memberships')).rows).toHaveLength(1)
+  const before = await joinSnapshot(f)
+  await expect(f.approve(id)).rejects.toMatchObject({
+    code: 'COMMUNITY_REVIEW_FORBIDDEN',
+  })
+  expect(await joinSnapshot(f)).toEqual(before)
+})
+it('rechecks reviewer permission after waiting for a revocation transaction to commit', async () => {
+  const f = await setup()
+  await f.submit(f.input)
+  const id = await f.id(),
+    release = deferred(),
+    entered = deferred()
+  const revocation = f.db.transaction(async (tx) => {
+    await f.communityServices.lockAccountsInside(tx, [f.reviewer.id])
+    await tx.query('DELETE FROM community_reviewers WHERE user_id=$1', [f.reviewer.id])
+    entered.resolve()
+    await release.promise
+  })
+  await entered.promise
+  const decision = f.approve(id)
+  const rejection = expect(decision).rejects.toMatchObject({
+    code: 'COMMUNITY_REVIEW_FORBIDDEN',
+  })
+  try {
+    await waiting(f)
+  } finally {
+    release.resolve()
+    await revocation
+  }
+  await rejection
+  expect((await f.get(id).catch((error) => error)).code).toBe('COMMUNITY_REVIEW_FORBIDDEN')
+  expect((await f.db.query('SELECT status FROM join_applications')).rows).toEqual([
+    { status: 'pending' },
+  ])
+  expect((await f.db.query('SELECT * FROM notification_events')).rows).toEqual([])
+})

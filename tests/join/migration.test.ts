@@ -125,8 +125,9 @@ it('keeps migration and runtime queries in the requested schema despite PGOPTION
 
 it('enforces review state, registry references, and application form constraints in PostgreSQL', async () => {
   const { db } = await isolated()
+  await db.query("INSERT INTO auth_users(id,email,nickname,password_hash,created_at) VALUES ('applicant','account@example.com','Applicant','hash',1)")
   const insert = (id: string, email: string, status = 'pending', reviewedAt: number | null = null) =>
-    db.query('INSERT INTO join_applications (id,email,nickname,qq,status,created_at,reviewed_at,form_version) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+    db.query("INSERT INTO join_applications (id,email,nickname,qq,status,created_at,reviewed_at,form_version,community_id,user_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'rifling-911','applicant')",
       [id, email, 'Applicant', '0001', status, 100, reviewedAt, 0])
   await insert('a', 'same@example.com')
   await expect(insert('b', 'same@example.com')).rejects.toMatchObject({ code: '23505' })
@@ -139,7 +140,8 @@ it('enforces review state, registry references, and application form constraints
 
 it('stores attachment bytes and rejects a false length or digest shape', async () => {
   const { db } = await isolated()
-  await db.query('INSERT INTO join_applications (id,email,nickname,qq,status,created_at) VALUES ($1,$2,$3,$4,$5,$6)',
+  await db.query("INSERT INTO auth_users(id,email,nickname,password_hash,created_at) VALUES ('applicant','account@example.com','Applicant','hash',1)")
+  await db.query("INSERT INTO join_applications (id,email,nickname,qq,status,created_at,community_id,user_id) VALUES ($1,$2,$3,$4,$5,$6,'rifling-911','applicant')",
     ['application', 'proof@example.com', 'Applicant', '0001', 'pending', 100])
   const insert = (id: string, byteLength: number, digest: string, bytes: Buffer) =>
     db.query('INSERT INTO join_application_attachments (id,application_id,ordinal,original_name,extension,sha256,byte_length,bytes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',

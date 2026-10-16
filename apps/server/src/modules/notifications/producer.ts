@@ -85,11 +85,18 @@ export class NotificationProducer {
    * `requireAdmin` 为真时核对发布者当前的 admin 成员关系；个人通知不需要 admin。
    */
   async publish(input: PublishInput, options: { requireAdmin?: boolean } = {}): Promise<PublishResult> {
+    return this.deps.repository.db.transaction(tx => this.publishInside(tx, input, options))
+  }
+
+  /** All publication queries use the caller's transaction; success is provisional until it commits. */
+  async publishInside(tx: SqlExecutor, input: PublishInput, options: { requireAdmin?: boolean; occurredAt?: number } = {}): Promise<PublishResult> {
     const entry = catalogEntry(input.eventType, EVENT_VERSION)
     if (entry === undefined) throw new NotificationError('NOTIFICATION_UNSUPPORTED')
     if (!entry.createsReceipt) throw new NotificationError('NOTIFICATION_UNSUPPORTED')
 
     const now = this.deps.now()
+    const occurredAt = options.occurredAt ?? now
+    if (!Number.isSafeInteger(occurredAt) || occurredAt < 0) throw new NotificationError('CONTENT_UNSAFE')
     const title = normalizeTitle(input.content.title)
     const safe = assertSafeNotificationHtml(input.content.html)
     if (Array.from(safe.text).length > MAX_TEXT_CODE_POINTS) throw new NotificationError('CONTENT_TOO_LARGE')
@@ -120,7 +127,7 @@ export class NotificationProducer {
       audience: input.audience,
     })
 
-    return await this.deps.repository.db.transaction(async tx => {
+    {
       const existing = await this.deps.repository.findEventByDedupeKey(input.dedupeKey, tx)
       if (existing !== undefined) {
         if (existing.digest !== digest) throw new NotificationError('NOTIFICATION_EVENT_CONFLICT')
@@ -139,7 +146,7 @@ export class NotificationProducer {
         }
       }
 
-      const userIds = await resolveAudience(this.deps.repository, input.audience, tx)
+      const userIds = await resolveAudience(this.deps.repository, input.audience, tx, entry.audiencePolicy)
       if (userIds.length === 0) throw new NotificationError('NOTIFICATION_AUDIENCE_INVALID')
 
       await this.deps.repository.insertContent({
@@ -170,7 +177,7 @@ export class NotificationProducer {
         event_id: eventId,
         event_type: input.eventType,
         event_version: EVENT_VERSION,
-        occurred_at: now,
+        occurred_at: occurredAt,
         source_type: input.sourceType,
         source_id: input.sourceId,
         source_revision: input.content.sourceRevision,
@@ -192,7 +199,7 @@ export class NotificationProducer {
       await this.deps.repository.insertRecipients(eventId, userIds, tx)
 
       return { eventId, contentId, dedupeKey: input.dedupeKey, audienceCount: userIds.length, replayed: false }
-    })
+    }
   }
 
   /**
@@ -251,7 +258,13 @@ export class NotificationProducer {
 }
 
 async function resolveAudience(repository: NotificationRepository,
-  audience: PublishInput['audience'], tx: SqlExecutor): Promise<string[]> {
+  audience: PublishInput['audience'], tx: SqlExecutor, policy?: 'single_existing_user'): Promise<string[]> {
+  if (policy === 'single_existing_user') {
+    if (audience.kind !== 'users' || audience.userIds.length !== 1) throw new NotificationError('NOTIFICATION_AUDIENCE_INVALID')
+    const existing = await repository.existingUserIds(audience.userIds, tx)
+    if (existing.size !== 1) throw new NotificationError('NOTIFICATION_AUDIENCE_INVALID')
+    return [...audience.userIds]
+  }
   if (audience.kind === 'users') {
     const unique = [...new Set(audience.userIds)]
     if (unique.length === 0 || unique.length > MAX_DIRECTED_AUDIENCE) {

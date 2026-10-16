@@ -99,7 +99,7 @@ export const LoginForm = forwardRef<AuthFormHandle, AuthFormProps>(function Logi
             disabled={disabled}
             onClick={onJoin}
           >
-            加入我们
+            注册账号
           </Button>
         </p>
       </div>
@@ -192,7 +192,7 @@ export const LoginForm = forwardRef<AuthFormHandle, AuthFormProps>(function Logi
             disabled
             aria-describedby={`${id}-providers`}
           >
-            Google 登录
+            Google 暂未开放
           </Button>
           <Button
             type="button"
@@ -200,11 +200,11 @@ export const LoginForm = forwardRef<AuthFormHandle, AuthFormProps>(function Logi
             disabled
             aria-describedby={`${id}-providers`}
           >
-            QQ 登录
+            QQ 暂未开放
           </Button>
         </div>
         <p id={`${id}-providers`} className={styles.providerHint}>
-          第三方登录暂未开放
+          Google、QQ 暂未开放
         </p>
       </div>
     </form>

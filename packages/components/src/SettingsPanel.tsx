@@ -19,7 +19,7 @@ import {
 } from '@components/src/notifications/NotificationPreferencesForm'
 import styles from '@components/src/SettingsPanel.module.scss'
 
-export type SettingsCategory = 'general' | 'profile' | 'account' | 'notifications'
+export type SettingsCategory = 'general' | 'profile' | 'account' | 'notifications' | 'identity-links'
 export type SettingsTheme = 'light' | 'dark' | 'system'
 export type SettingsField = 'nickname' | 'qq' | 'fivemId'
 
@@ -59,11 +59,13 @@ export interface SettingsPanelProps {
   actionPending: boolean
   authMessage?: string
   onRetryAuth?: () => void
+  identityLinks?: ReactNode
 }
 
 const categories: { value: SettingsCategory; label: string }[] = [
   { value: 'profile', label: '个人资料' }, { value: 'general', label: '通用' },
   { value: 'notifications', label: '通知' }, { value: 'account', label: '账号' },
+  {value:'identity-links',label:'关联账户'},
 ]
 
 export function SettingsPanel(props: SettingsPanelProps) {
@@ -85,7 +87,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
       <SelectField value={props.category} onValueChange={(value) => {
         if (value === 'logout') props.onLogout()
         else if (value === 'profile' || value === 'general' || value === 'account'
-          || value === 'notifications') {
+          || value === 'notifications' || value === 'identity-links') {
           props.onCategoryChange(value)
         }
       }}>
@@ -134,7 +136,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
             </SelectField>
           </SettingItem>
         </section>
-      </ContentAreaState> : props.category === 'notifications' ? null
+      </ContentAreaState> : props.category === 'identity-links' ? props.identityLinks : props.category === 'notifications' ? null
         : props.profileStatus === 'ready' && profile ? <ContentAreaState status="ready">
           {props.category === 'profile' ? <ProfileContent {...props} profile={profile} /> :
             <AccountContent {...props} profile={profile} />}

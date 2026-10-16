@@ -1,0 +1,637 @@
+/auth/cfx/attempts:
+  post:
+    operationId: createCfxAttempt
+    summary: createCfxAttempt
+    tags: [authentication]
+    security: []
+    description: |
+      Browser-bound Cfx verification; does not create a Website account or session.
+      Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+      Cookie is optional in the schema but ownership is mandatory except for creation.
+      Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+      user/email/upstream, timeout, capacity/rate and closed-service failures.
+    parameters:
+      - in: header
+        name: Cookie
+        required: false
+        schema: { type: string, maxLength: 4096 }
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '../openapi.yaml#/components/schemas/CfxEmptyRequest' }
+    responses:
+      '201':
+        description: Browser-bound verification result
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+          Set-Cookie:
+            description: HttpOnly binding; SameSite=Lax, Path=/, Max-Age=1200; Secure in production.
+            schema: { type: string }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/CfxAttemptCreated' }
+      '400':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '403':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '413':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '415':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '429':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+          Retry-After: { $ref: '../openapi.yaml#/components/headers/RetryAfter' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '500':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '503':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      'default':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+/auth/cfx/attempts/{id}/complete:
+  post:
+    operationId: completeCfxManualAttempt
+    summary: completeCfxManualAttempt
+    tags: [authentication]
+    security: []
+    description: |
+      Browser-bound Cfx verification; does not create a Website account or session.
+      Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+      Cookie is optional in the schema but ownership is mandatory except for creation.
+      Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+      user/email/upstream, timeout, capacity/rate and closed-service failures.
+    parameters:
+      - in: header
+        name: Cookie
+        required: false
+        schema: { type: string, maxLength: 4096 }
+      - in: path
+        name: id
+        required: true
+        schema: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '../openapi.yaml#/components/schemas/CfxCompleteRequest' }
+    responses:
+      '200':
+        description: Browser-bound verification result
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/CfxCompletion' }
+      '400':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '403':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '404':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '409':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '410':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '413':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '415':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '429':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+          Retry-After: { $ref: '../openapi.yaml#/components/headers/RetryAfter' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '500':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '502':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '503':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '504':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      'default':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+/auth/cfx/callback:
+  get:
+    operationId: receiveCfxCallback
+    summary: receiveCfxCallback
+    tags: [authentication]
+    security: []
+    description: |
+      Browser-bound Cfx verification; does not create a Website account or session.
+      Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+      Cookie is optional in the schema but ownership is mandatory except for creation.
+      Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+      user/email/upstream, timeout, capacity/rate and closed-service failures.
+    parameters:
+      - in: header
+        name: Cookie
+        required: false
+        schema: { type: string, maxLength: 4096 }
+      - in: query
+        name: attemptId
+        required: true
+        schema: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+      - in: query
+        name: payload
+        required: true
+        schema: { $ref: '../openapi.yaml#/components/schemas/CfxPayload' }
+    responses:
+      '200':
+        description: Browser-bound verification result
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/CfxCompletion' }
+      '400':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '403':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '404':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '409':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '410':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '429':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+          Retry-After: { $ref: '../openapi.yaml#/components/headers/RetryAfter' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '500':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '502':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '503':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '504':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      'default':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+/auth/cfx/attempts/{id}:
+  get:
+    operationId: getCfxAttempt
+    summary: getCfxAttempt
+    tags: [authentication]
+    security: []
+    description: |
+      Browser-bound Cfx verification; does not create a Website account or session.
+      Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+      Cookie is optional in the schema but ownership is mandatory except for creation.
+      Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+      user/email/upstream, timeout, capacity/rate and closed-service failures.
+    parameters:
+      - in: header
+        name: Cookie
+        required: false
+        schema: { type: string, maxLength: 4096 }
+      - in: path
+        name: id
+        required: true
+        schema: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    responses:
+      '200':
+        description: Browser-bound verification result
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/CfxAttemptStatus' }
+      '400':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '403':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '404':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '429':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+          Retry-After: { $ref: '../openapi.yaml#/components/headers/RetryAfter' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '500':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '503':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      'default':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+  delete:
+    operationId: cancelCfxAttempt
+    summary: cancelCfxAttempt
+    tags: [authentication]
+    security: []
+    description: |
+      Browser-bound Cfx verification; does not create a Website account or session.
+      Configured mode only; mutations require exact configured Origin. Query keys cannot repeat.
+      Cookie is optional in the schema but ownership is mandatory except for creation.
+      Fixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,
+      user/email/upstream, timeout, capacity/rate and closed-service failures.
+    parameters:
+      - in: header
+        name: Cookie
+        required: false
+        schema: { type: string, maxLength: 4096 }
+      - in: path
+        name: id
+        required: true
+        schema: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    responses:
+      '200':
+        description: Browser-bound verification result
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/CfxCancellation' }
+      '400':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '403':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '404':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '429':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+          Retry-After: { $ref: '../openapi.yaml#/components/headers/RetryAfter' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '500':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      '503':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }
+      'default':
+        description: Safe Cfx or framework error
+        headers:
+          X-Request-Id: { $ref: '../openapi.yaml#/components/headers/RequestId' }
+          Cache-Control: { $ref: '../openapi.yaml#/components/headers/CacheControl' }
+          Referrer-Policy: { schema: { type: string, const: no-referrer } }
+          X-Content-Type-Options: { $ref: '../openapi.yaml#/components/headers/ContentTypeOptions' }
+        content:
+          application/json:
+            schema: { $ref: '../openapi.yaml#/components/schemas/ErrorEnvelope' }

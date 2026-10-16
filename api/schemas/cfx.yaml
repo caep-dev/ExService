@@ -1,0 +1,94 @@
+CfxIdentity:
+  type: object
+  additionalProperties: false
+  required: [id, username, avatarUrl, email]
+  properties:
+    id: { type: string, pattern: '^[1-9][0-9]{0,15}$', maxLength: 16 }
+    username: { type: string, minLength: 1, maxLength: 128, pattern: '^[^\u0000-\u001F\u007F]+$' }
+    avatarUrl: { type: string, format: uri, maxLength: 2048, pattern: '^https://' }
+    email: { $ref: '../openapi.yaml#/components/schemas/Email' }
+CfxMode:
+  type: string
+  enum: [manual, redirect]
+CfxPayload:
+  type: string
+  minLength: 1
+  maxLength: 1024
+  description: RSA-OAEP encrypted standard Base64; ASCII whitespace is accepted.
+CfxEmptyRequest:
+  type: object
+  additionalProperties: false
+CfxCompleteRequest:
+  type: object
+  additionalProperties: false
+  required: [payload]
+  properties:
+    payload: { $ref: '#/CfxPayload' }
+CfxAttemptCreated:
+  type: object
+  additionalProperties: false
+  required: [attemptId, mode, authorizationUrl, expiresAt]
+  properties:
+    attemptId: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    mode: { $ref: '#/CfxMode' }
+    authorizationUrl: { type: string, format: uri, maxLength: 4096, pattern: '^https://forum\.cfx\.re/user-api-key/new\?' }
+    expiresAt: { $ref: '../openapi.yaml#/components/schemas/SafeTimestamp' }
+CfxCompletion:
+  type: object
+  additionalProperties: false
+  required: [attemptId, state]
+  properties:
+    attemptId: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    state: { type: string, enum: [ready] }
+CfxCancellation:
+  type: object
+  additionalProperties: false
+  required: [attemptId, state]
+  properties:
+    attemptId: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    state: { type: string, enum: [cancelled, failed, expired, consumed] }
+CfxFailureCode:
+  type: string
+  enum: [CFX_INVALID_PAYLOAD, CFX_NONCE_INVALID, CFX_API_VERSION_UNSUPPORTED, CFX_USER_INVALID, CFX_EMAIL_UNAVAILABLE, CFX_UPSTREAM_UNAVAILABLE, CFX_UPSTREAM_TIMEOUT]
+CfxPendingStatus:
+  type: object
+  additionalProperties: false
+  required: [attemptId, state, expiresAt]
+  properties:
+    attemptId: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    state: { type: string, enum: [pending, processing] }
+    expiresAt: { $ref: '../openapi.yaml#/components/schemas/SafeTimestamp' }
+CfxReadyStatus:
+  type: object
+  additionalProperties: false
+  required: [attemptId, state, expiresAt, identity, identityTicket, ticketExpiresAt]
+  properties:
+    attemptId: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    state: { type: string, enum: [ready] }
+    expiresAt: { $ref: '../openapi.yaml#/components/schemas/SafeTimestamp' }
+    identity: { $ref: '#/CfxIdentity' }
+    identityTicket: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    ticketExpiresAt: { $ref: '../openapi.yaml#/components/schemas/SafeTimestamp' }
+CfxFailedStatus:
+  type: object
+  additionalProperties: false
+  required: [attemptId, state, expiresAt, failureCode]
+  properties:
+    attemptId: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    state: { type: string, enum: [failed] }
+    expiresAt: { $ref: '../openapi.yaml#/components/schemas/SafeTimestamp' }
+    failureCode: { $ref: '#/CfxFailureCode' }
+CfxTerminalStatus:
+  type: object
+  additionalProperties: false
+  required: [attemptId, state, expiresAt]
+  properties:
+    attemptId: { $ref: '../openapi.yaml#/components/schemas/OpaqueIdentifier' }
+    state: { type: string, enum: [cancelled, expired, consumed] }
+    expiresAt: { $ref: '../openapi.yaml#/components/schemas/SafeTimestamp' }
+CfxAttemptStatus:
+  oneOf:
+    - { $ref: '#/CfxPendingStatus' }
+    - { $ref: '#/CfxReadyStatus' }
+    - { $ref: '#/CfxFailedStatus' }
+    - { $ref: '#/CfxTerminalStatus' }

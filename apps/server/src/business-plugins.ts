@@ -5,7 +5,7 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import fp from 'fastify-plugin'
 import autoload from '@fastify/autoload'
 import type { BusinessServices } from './business-services.js'
-import { BusinessPluginLoadError, businessDirectoryPattern, businessPluginNamePattern, type BusinessPluginStage } from './business-plugin-errors.js'
+import { BusinessPluginLoadError, businessDirectoryPattern, businessPluginNamePattern, requireBusinessServices, type BusinessPluginStage } from './business-plugin-errors.js'
 
 interface Candidate {
   stage: BusinessPluginStage
@@ -144,5 +144,8 @@ export async function loadBusinessPlugins(app: FastifyInstance, services: Busine
   }
 }
 
-const businessPlugins: FastifyPluginAsync<BusinessServices> = async (app, services) => loadBusinessPlugins(app, services)
+const businessPlugins: FastifyPluginAsync<BusinessServices> = async (app, services) => {
+  requireBusinessServices('application-business-plugins', { identityLinkServices: services.identityLinkServices })
+  await loadBusinessPlugins(app, services)
+}
 export default fp(businessPlugins, { name: 'application-business-plugins', fastify: '5.x' })

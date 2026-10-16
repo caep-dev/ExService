@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "ExWebsite Server API",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "Frontend 与 Backend 之间的唯一 HTTP API Contract。\n\n该 Contract 由本仓库唯一的 Fastify Server 和 TypeScript 客户端共同使用。\n所有 schema 限定在 JSON Schema Draft-07 兼容子集内。\n"
   },
   "servers": [
@@ -38,6 +38,1582 @@
     }
   ],
   "paths": {
+    "/auth/cfx/attempts": {
+      "post": {
+        "operationId": "createCfxAttempt",
+        "summary": "createCfxAttempt",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "description": "Browser-bound Cfx verification; does not create a Website account or session.\nConfigured mode only; mutations require exact configured Origin. Query keys cannot repeat.\nCookie is optional in the schema but ownership is mandatory except for creation.\nFixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,\nuser/email/upstream, timeout, capacity/rate and closed-service failures.\n",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Cookie",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfxEmptyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Browser-bound verification result",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              },
+              "Set-Cookie": {
+                "description": "HttpOnly binding; SameSite=Lax, Path=/, Max-Age=1200; Secure in production.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfxAttemptCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/cfx/attempts/{id}/complete": {
+      "post": {
+        "operationId": "completeCfxManualAttempt",
+        "summary": "completeCfxManualAttempt",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "description": "Browser-bound Cfx verification; does not create a Website account or session.\nConfigured mode only; mutations require exact configured Origin. Query keys cannot repeat.\nCookie is optional in the schema but ownership is mandatory except for creation.\nFixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,\nuser/email/upstream, timeout, capacity/rate and closed-service failures.\n",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Cookie",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OpaqueIdentifier"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfxCompleteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Browser-bound verification result",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfxCompletion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/cfx/callback": {
+      "get": {
+        "operationId": "receiveCfxCallback",
+        "summary": "receiveCfxCallback",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "description": "Browser-bound Cfx verification; does not create a Website account or session.\nConfigured mode only; mutations require exact configured Origin. Query keys cannot repeat.\nCookie is optional in the schema but ownership is mandatory except for creation.\nFixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,\nuser/email/upstream, timeout, capacity/rate and closed-service failures.\n",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Cookie",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "in": "query",
+            "name": "attemptId",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OpaqueIdentifier"
+            }
+          },
+          {
+            "in": "query",
+            "name": "payload",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CfxPayload"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Browser-bound verification result",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfxCompletion"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/cfx/attempts/{id}": {
+      "get": {
+        "operationId": "getCfxAttempt",
+        "summary": "getCfxAttempt",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "description": "Browser-bound Cfx verification; does not create a Website account or session.\nConfigured mode only; mutations require exact configured Origin. Query keys cannot repeat.\nCookie is optional in the schema but ownership is mandatory except for creation.\nFixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,\nuser/email/upstream, timeout, capacity/rate and closed-service failures.\n",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Cookie",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OpaqueIdentifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Browser-bound verification result",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfxAttemptStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "cancelCfxAttempt",
+        "summary": "cancelCfxAttempt",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "description": "Browser-bound Cfx verification; does not create a Website account or session.\nConfigured mode only; mutations require exact configured Origin. Query keys cannot repeat.\nCookie is optional in the schema but ownership is mandatory except for creation.\nFixed CFX errors cover disabled/flow/origin, ownership/state, payload/nonce/version,\nuser/email/upstream, timeout, capacity/rate and closed-service failures.\n",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Cookie",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 4096
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OpaqueIdentifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Browser-bound verification result",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfxCancellation"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              },
+              "Retry-After": {
+                "$ref": "#/components/headers/RetryAfter"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Safe Cfx or framework error",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "operationId": "getHealth",
@@ -98,750 +1674,6 @@
           },
           "default": {
             "$ref": "#/components/responses/ErrorResponse"
-          }
-        }
-      }
-    },
-    "/join/applications": {
-      "post": {
-        "operationId": "submitJoinApplication",
-        "summary": "Submit one complete join application",
-        "description": "Exactly one application JSON part; new players cannot attach proofs. Each proof carries its raw file bytes in a separate multipart part with the same proofs field name, without percent encoding. Proof parts retain their supplied media type; the server validates extension and byte signatures independently of that media type. One normalized email may apply only once across all histories and categories. Existing history returns 409 JOIN_APPLICATION_EXISTS before account-only EMAIL_IN_USE. Validation and atomic persistence complete before success. All responses use no-store.",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "x-fastify-config": {
-          "joinUpload": {
-            "wireBytes": 67108864,
-            "jsonBytes": 65536,
-            "fileBytes": 10485760,
-            "totalFileBytes": 52428800,
-            "proofs": 5,
-            "parts": 6,
-            "fieldNameBytes": 64,
-            "headerPairs": 32,
-            "headerBytes": 16384,
-            "slots": 2,
-            "deadlineMs": 120000
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/JoinApplicationRequest"
-              },
-              "encoding": {
-                "application": {
-                  "contentType": "application/json"
-                },
-                "proofs": {
-                  "contentType": "*/*"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful operation; not cacheable.",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinApplicationReceived"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "408": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "409": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "413": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "415": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "429": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "500": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "503": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        }
-      }
-    },
-    "/join/applications/query": {
-      "post": {
-        "operationId": "queryJoinApplicationResult",
-        "summary": "Read the minimal join application result",
-        "description": "Read-only snapshot; six closed status/nextAction pairs, no email or personal information. Missing applications return 200 not_found, including account-only legacy users. A completed invitation with an existing user wins over newer history; otherwise use createdAt DESC, id DESC and latest invitation issuedAt DESC, id DESC. Expiry calculation never writes business state. All responses use no-store.",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JoinApplicationQueryRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful operation; not cacheable.",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinApplicationResult"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "429": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "500": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        }
-      }
-    },
-    "/admin/join/applications": {
-      "get": {
-        "operationId": "listJoinApplications",
-        "summary": "listJoinApplications",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinApplicationList"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "parameters": [
-          {
-            "name": "view",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "pending",
-                "all"
-              ],
-              "default": "pending"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "pattern": "^([1-9]|[1-4][0-9]|50)$",
-              "default": "20"
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "pattern": "^(0|[1-9][0-9]{0,8})$",
-              "default": "0"
-            }
-          }
-        ]
-      }
-    },
-    "/admin/join/applications/{applicationId}": {
-      "get": {
-        "operationId": "getJoinApplication",
-        "summary": "getJoinApplication",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinApplicationDetail"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "404": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "parameters": [
-          {
-            "name": "applicationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Uuid"
-            }
-          }
-        ]
-      }
-    },
-    "/admin/join/applications/{applicationId}/approve": {
-      "post": {
-        "operationId": "approveJoinApplication",
-        "summary": "approveJoinApplication",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinApplicationDetail"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "404": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "409": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "429": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JoinReviewRequest"
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "applicationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Uuid"
-            }
-          }
-        ]
-      }
-    },
-    "/admin/join/applications/{applicationId}/reject": {
-      "post": {
-        "operationId": "rejectJoinApplication",
-        "summary": "rejectJoinApplication",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinApplicationDetail"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "404": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "409": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JoinReviewRequest"
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "applicationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Uuid"
-            }
-          }
-        ]
-      }
-    },
-    "/admin/join/applications/{applicationId}/invitations": {
-      "post": {
-        "operationId": "resendJoinInvitation",
-        "summary": "resendJoinInvitation",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinApplicationDetail"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "404": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "409": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "429": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JoinReviewRequest"
-              }
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "applicationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Uuid"
-            }
-          }
-        ]
-      }
-    },
-    "/admin/join/applications/{applicationId}/attachments/{attachmentId}": {
-      "get": {
-        "operationId": "downloadJoinApplicationAttachment",
-        "summary": "Download an application proof attachment",
-        "description": "Development review access only. Missing or mismatched application/attachment pairs return 404 JOIN_ATTACHMENT_NOT_FOUND. Always download; never preview. Two response slots are acquired before attachment reads; capacity failure is 503 and Retry-After: 5. A 60 second response deadline terminates started connections without a second JSON response. All responses use no-store.",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "x-fastify-config": {
-          "joinDownload": {
-            "slots": 2,
-            "deadlineMs": 60000
-          }
-        },
-        "parameters": [
-          {
-            "name": "applicationId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Uuid"
-            }
-          },
-          {
-            "name": "attachmentId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Original attachment bytes.",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              },
-              "Content-Disposition": {
-                "description": "attachment; safe ASCII filename fallback and UTF-8 filename*.",
-                "required": true,
-                "schema": {
-                  "type": "string",
-                  "pattern": "^attachment;"
-                }
-              },
-              "X-Content-Type-Options": {
-                "required": true,
-                "schema": {
-                  "type": "string",
-                  "const": "nosniff"
-                }
-              }
-            },
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "404": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "500": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "503": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          }
-        }
-      }
-    },
-    "/auth/invitations/check": {
-      "post": {
-        "operationId": "checkInvitationEligibility",
-        "summary": "checkInvitationEligibility",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InvitationEligibility"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "404": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "409": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "429": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InvitationEligibilityRequest"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/invitations/code": {
-      "post": {
-        "operationId": "requestInvitationCode",
-        "summary": "requestInvitationCode",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "202": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InvitationCodeAccepted"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "429": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InvitationCodeRequest"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/invitations/verify": {
-      "post": {
-        "operationId": "verifyInvitationCode",
-        "summary": "verifyInvitationCode",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InvitationVerified"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "429": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InvitationVerifyRequest"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/invitations/complete": {
-      "post": {
-        "operationId": "completeInvitationRegistration",
-        "summary": "completeInvitationRegistration",
-        "security": [],
-        "tags": [
-          "authentication"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "headers": {
-              "X-Request-Id": {
-                "$ref": "#/components/headers/RequestId"
-              },
-              "Cache-Control": {
-                "$ref": "#/components/headers/CacheControl"
-              }
-            },
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InvitationRegistrationCompleted"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "401": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "409": {
-            "$ref": "#/components/responses/ErrorResponse"
-          },
-          "429": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "503": {
-            "$ref": "#/components/responses/RetryableErrorResponse"
-          },
-          "default": {
-            "$ref": "#/components/responses/ErrorResponse"
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/InvitationCompleteRequest"
-              }
-            }
           }
         }
       }
@@ -3057,6 +3889,2023 @@
           }
         }
       }
+    },
+    "/auth/registration/code": {
+      "post": {
+        "operationId": "requestRegistrationCode",
+        "summary": "requestRegistrationCode",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestRegistrationCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationCodeRequested"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/registration/verify": {
+      "post": {
+        "operationId": "verifyRegistrationCode",
+        "summary": "verifyRegistrationCode",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRegistrationCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationGrant"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "410": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/registrations": {
+      "post": {
+        "operationId": "completePublicRegistration",
+        "summary": "completePublicRegistration",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompletePublicRegistrationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationResult"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "410": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/cfx/sign-in": {
+      "post": {
+        "operationId": "signInWithCfx",
+        "summary": "signInWithCfx",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfxSignInRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfxSignInResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "410": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/me/identity-links": {
+      "get": {
+        "operationId": "getMyIdentityLinks",
+        "summary": "getMyIdentityLinks",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityLinksResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/me/identity-links/cfx/attempts": {
+      "post": {
+        "operationId": "createMyCfxLinkAttempt",
+        "summary": "createMyCfxLinkAttempt",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfxEmptyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CfxAttemptCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/me/identity-links/cfx": {
+      "post": {
+        "operationId": "linkMyCfxIdentity",
+        "summary": "linkMyCfxIdentity",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkMyCfxIdentityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "410": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/CredentialRetryableErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unlinkMyCfxIdentity",
+        "summary": "unlinkMyCfxIdentity",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Server-generated request identifier.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "Cache-Control": {
+                "description": "Authentication responses are not cacheable.",
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                },
+                "required": true
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                },
+                "required": true
+              },
+              "X-Content-Type-Options": {
+                "description": "Disables MIME sniffing so stored bytes are never rendered inline.",
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                },
+                "required": true
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnlinkIdentityResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/CredentialErrorResponse"
+          }
+        }
+      }
+    },
+    "/communities": {
+      "get": {
+        "operationId": "listCommunities",
+        "summary": "listCommunities",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/communities/{communityId}": {
+      "get": {
+        "operationId": "getCommunity",
+        "summary": "getCommunity",
+        "tags": [
+          "authentication"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Community"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/me/communities": {
+      "get": {
+        "operationId": "listMyCommunityStatuses",
+        "summary": "listMyCommunityStatuses",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyCommunityStatusList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/me/communities/{communityId}": {
+      "get": {
+        "operationId": "getMyCommunityStatus",
+        "summary": "getMyCommunityStatus",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyCommunityStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/auth/me/review-access": {
+      "get": {
+        "operationId": "getMyCommunityReviewAccess",
+        "summary": "getMyCommunityReviewAccess",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityReviewAccess"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/admin/communities": {
+      "post": {
+        "operationId": "createCommunity",
+        "summary": "createCommunity",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommunityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Community"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/admin/communities/{communityId}": {
+      "put": {
+        "operationId": "updateCommunity",
+        "summary": "updateCommunity",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommunityRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Community"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/admin/communities/{communityId}/reviewers": {
+      "get": {
+        "operationId": "listCommunityReviewers",
+        "summary": "listCommunityReviewers",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityReviewerList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/admin/communities/{communityId}/reviewers/{userId}": {
+      "put": {
+        "operationId": "grantCommunityReviewer",
+        "summary": "grantCommunityReviewer",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CfxEmptyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommunityReviewer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "revokeCommunityReviewer",
+        "summary": "revokeCommunityReviewer",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeCommunityReviewerResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/communities/{communityId}/applications": {
+      "post": {
+        "operationId": "submitJoinApplication",
+        "summary": "Submit one complete join application",
+        "description": "Authenticated lifetime application for the path community. Applicant ownership and contact snapshots come from the current account. One multipart JSON part {qq,form} and optional proofs commit atomically. Cfx is a requirement, not a deduplication key.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "authentication"
+        ],
+        "x-fastify-config": {
+          "joinUpload": {
+            "wireBytes": 67108864,
+            "jsonBytes": 65536,
+            "fileBytes": 10485760,
+            "totalFileBytes": 52428800,
+            "proofs": 5,
+            "parts": 6,
+            "fieldNameBytes": 64,
+            "headerPairs": 32,
+            "headerBytes": 16384,
+            "slots": 2,
+            "deadlineMs": 120000
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinApplicationRequest"
+              },
+              "encoding": {
+                "application": {
+                  "contentType": "application/json"
+                },
+                "proofs": {
+                  "contentType": "*/*"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinApplicationReceived"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "408": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "413": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "415": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/RetryableErrorResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/RetryableErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        },
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          }
+        ]
+      }
+    },
+    "/admin/communities/{communityId}/applications": {
+      "get": {
+        "operationId": "listJoinApplications",
+        "summary": "listJoinApplications",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "default": 0
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "live",
+                "legacy",
+                "all"
+              ],
+              "default": "live"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinApplicationList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/admin/communities/{communityId}/applications/{applicationId}": {
+      "get": {
+        "operationId": "getJoinApplication",
+        "summary": "getJoinApplication",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          },
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinApplicationDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/admin/communities/{communityId}/applications/{applicationId}/approve": {
+      "post": {
+        "operationId": "approveJoinApplication",
+        "summary": "approveJoinApplication",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          },
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinApplicationDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/admin/communities/{communityId}/applications/{applicationId}/reject": {
+      "post": {
+        "operationId": "rejectJoinApplication",
+        "summary": "rejectJoinApplication",
+        "tags": [
+          "authentication"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          },
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation; not cacheable.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-referrer"
+                }
+              },
+              "X-Content-Type-Options": {
+                "$ref": "#/components/headers/ContentTypeOptions"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinApplicationDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/admin/communities/{communityId}/applications/{applicationId}/attachments/{attachmentId}": {
+      "get": {
+        "operationId": "downloadJoinApplicationAttachment",
+        "summary": "Download an application proof attachment",
+        "description": "Authorized community reviewer download. Check community, application and attachment ownership in one read snapshot. Original bounded bytes only; no inline preview. Existing response slot and deadline budgets apply.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "authentication"
+        ],
+        "x-fastify-config": {
+          "joinDownload": {
+            "slots": 2,
+            "deadlineMs": 60000
+          }
+        },
+        "parameters": [
+          {
+            "name": "communityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CommunityId"
+            }
+          },
+          {
+            "name": "applicationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Original attachment bytes.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "Content-Disposition": {
+                "description": "attachment; safe ASCII filename fallback and UTF-8 filename*.",
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "pattern": "^attachment;"
+                }
+              },
+              "X-Content-Type-Options": {
+                "required": true,
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          },
+          "503": {
+            "$ref": "#/components/responses/RetryableErrorResponse"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3088,6 +5937,7 @@
       },
       "CacheControl": {
         "description": "Authentication responses are not cacheable.",
+        "required": true,
         "schema": {
           "type": "string",
           "const": "no-store"
@@ -3154,9 +6004,352 @@
             }
           }
         }
+      },
+      "CredentialErrorResponse": {
+        "description": "Safe application error response",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "Cache-Control": {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "no-store"
+            }
+          },
+          "Referrer-Policy": {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "no-referrer"
+            }
+          },
+          "X-Content-Type-Options": {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "nosniff"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "CredentialRetryableErrorResponse": {
+        "description": "Safe application error response with a retry delay",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "Cache-Control": {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "no-store"
+            }
+          },
+          "Retry-After": {
+            "$ref": "#/components/headers/RetryAfter"
+          },
+          "Referrer-Policy": {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "no-referrer"
+            }
+          },
+          "X-Content-Type-Options": {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "const": "nosniff"
+            }
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
       }
     },
     "schemas": {
+      "CfxIdentity": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "username",
+          "avatarUrl",
+          "email"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$",
+            "maxLength": 16
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\u0000-\\u001F\\u007F]+$"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048,
+            "pattern": "^https://"
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          }
+        }
+      },
+      "CfxMode": {
+        "type": "string",
+        "enum": [
+          "manual",
+          "redirect"
+        ]
+      },
+      "CfxPayload": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024,
+        "description": "RSA-OAEP encrypted standard Base64; ASCII whitespace is accepted."
+      },
+      "CfxEmptyRequest": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "CfxCompleteRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "payload"
+        ],
+        "properties": {
+          "payload": {
+            "$ref": "#/components/schemas/CfxPayload"
+          }
+        }
+      },
+      "CfxAttemptCreated": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attemptId",
+          "mode",
+          "authorizationUrl",
+          "expiresAt"
+        ],
+        "properties": {
+          "attemptId": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/CfxMode"
+          },
+          "authorizationUrl": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 4096,
+            "pattern": "^https://forum\\.cfx\\.re/user-api-key/new\\?"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "CfxCompletion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attemptId",
+          "state"
+        ],
+        "properties": {
+          "attemptId": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ready"
+            ]
+          }
+        }
+      },
+      "CfxCancellation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attemptId",
+          "state"
+        ],
+        "properties": {
+          "attemptId": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "cancelled",
+              "failed",
+              "expired",
+              "consumed"
+            ]
+          }
+        }
+      },
+      "CfxFailureCode": {
+        "type": "string",
+        "enum": [
+          "CFX_INVALID_PAYLOAD",
+          "CFX_NONCE_INVALID",
+          "CFX_API_VERSION_UNSUPPORTED",
+          "CFX_USER_INVALID",
+          "CFX_EMAIL_UNAVAILABLE",
+          "CFX_UPSTREAM_UNAVAILABLE",
+          "CFX_UPSTREAM_TIMEOUT"
+        ]
+      },
+      "CfxPendingStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attemptId",
+          "state",
+          "expiresAt"
+        ],
+        "properties": {
+          "attemptId": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing"
+            ]
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "CfxReadyStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attemptId",
+          "state",
+          "expiresAt",
+          "identity",
+          "identityTicket",
+          "ticketExpiresAt"
+        ],
+        "properties": {
+          "attemptId": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ready"
+            ]
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/CfxIdentity"
+          },
+          "identityTicket": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "ticketExpiresAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "CfxFailedStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attemptId",
+          "state",
+          "expiresAt",
+          "failureCode"
+        ],
+        "properties": {
+          "attemptId": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "failed"
+            ]
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "failureCode": {
+            "$ref": "#/components/schemas/CfxFailureCode"
+          }
+        }
+      },
+      "CfxTerminalStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attemptId",
+          "state",
+          "expiresAt"
+        ],
+        "properties": {
+          "attemptId": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "cancelled",
+              "expired",
+              "consumed"
+            ]
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "CfxAttemptStatus": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/CfxPendingStatus"
+          },
+          {
+            "$ref": "#/components/schemas/CfxReadyStatus"
+          },
+          {
+            "$ref": "#/components/schemas/CfxFailedStatus"
+          },
+          {
+            "$ref": "#/components/schemas/CfxTerminalStatus"
+          }
+        ]
+      },
       "OidcChallenge": {
         "type": "string",
         "minLength": 1,
@@ -3728,18 +6921,10 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "email",
-          "nickname",
           "qq",
           "form"
         ],
         "properties": {
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          },
-          "nickname": {
-            "$ref": "#/components/schemas/Nickname"
-          },
           "qq": {
             "$ref": "#/components/schemas/JoinApplicationQq"
           },
@@ -3842,18 +7027,10 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "email",
-          "nickname",
           "qq",
           "form"
         ],
         "properties": {
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          },
-          "nickname": {
-            "$ref": "#/components/schemas/Nickname"
-          },
           "qq": {
             "$ref": "#/components/schemas/JoinApplicationQq"
           },
@@ -3890,130 +7067,6 @@
           },
           {
             "$ref": "#/components/schemas/JoinExperiencedApplicationPayload"
-          }
-        ]
-      },
-      "JoinApplicationQueryRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "email"
-        ],
-        "properties": {
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          }
-        }
-      },
-      "JoinApplicationResult": {
-        "oneOf": [
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "status",
-              "nextAction"
-            ],
-            "properties": {
-              "status": {
-                "type": "string",
-                "const": "not_found"
-              },
-              "nextAction": {
-                "type": "string",
-                "const": "apply"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "status",
-              "nextAction"
-            ],
-            "properties": {
-              "status": {
-                "type": "string",
-                "const": "pending"
-              },
-              "nextAction": {
-                "type": "string",
-                "const": "wait"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "status",
-              "nextAction"
-            ],
-            "properties": {
-              "status": {
-                "type": "string",
-                "const": "approved"
-              },
-              "nextAction": {
-                "type": "string",
-                "const": "register"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "status",
-              "nextAction"
-            ],
-            "properties": {
-              "status": {
-                "type": "string",
-                "const": "rejected"
-              },
-              "nextAction": {
-                "type": "string",
-                "const": "contact_community"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "status",
-              "nextAction"
-            ],
-            "properties": {
-              "status": {
-                "type": "string",
-                "const": "invitation_expired"
-              },
-              "nextAction": {
-                "type": "string",
-                "const": "contact_community"
-              }
-            }
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "status",
-              "nextAction"
-            ],
-            "properties": {
-              "status": {
-                "type": "string",
-                "const": "registered"
-              },
-              "nextAction": {
-                "type": "string",
-                "const": "login"
-              }
-            }
           }
         ]
       },
@@ -4089,9 +7142,12 @@
           "createdAt",
           "reviewedAt",
           "reviewedByUserId",
-          "invitationStatus",
-          "deliveryStatus",
-          "applicationType"
+          "applicationType",
+          "communityId",
+          "applicantUserId",
+          "legacyReadOnly",
+          "identitySnapshot",
+          "missingProviders"
         ],
         "properties": {
           "id": {
@@ -4129,33 +7185,38 @@
           "reviewedByUserId": {
             "$ref": "#/components/schemas/NullableUuid"
           },
-          "invitationStatus": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "active",
-              "expired",
-              "completed",
-              null
-            ]
-          },
-          "deliveryStatus": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "pending",
-              "sent",
-              "failed",
-              null
-            ]
-          },
           "applicationType": {
             "type": "string",
             "const": "new"
+          },
+          "communityId": {
+            "$ref": "#/components/schemas/CommunityId"
+          },
+          "applicantUserId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "legacyReadOnly": {
+            "type": "boolean",
+            "const": false
+          },
+          "identitySnapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JoinIdentitySnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missingProviders": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "const": "cfx"
+            }
           }
         }
       },
@@ -4164,7 +7225,6 @@
         "additionalProperties": false,
         "required": [
           "application",
-          "invitation",
           "serverTime",
           "formVersion",
           "form",
@@ -4173,16 +7233,6 @@
         "properties": {
           "application": {
             "$ref": "#/components/schemas/JoinNewApplicationSummary"
-          },
-          "invitation": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/InvitationSummary"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "serverTime": {
             "$ref": "#/components/schemas/SafeTimestamp"
@@ -4215,9 +7265,12 @@
           "createdAt",
           "reviewedAt",
           "reviewedByUserId",
-          "invitationStatus",
-          "deliveryStatus",
-          "applicationType"
+          "applicationType",
+          "communityId",
+          "applicantUserId",
+          "legacyReadOnly",
+          "identitySnapshot",
+          "missingProviders"
         ],
         "properties": {
           "id": {
@@ -4255,33 +7308,38 @@
           "reviewedByUserId": {
             "$ref": "#/components/schemas/NullableUuid"
           },
-          "invitationStatus": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "active",
-              "expired",
-              "completed",
-              null
-            ]
-          },
-          "deliveryStatus": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "pending",
-              "sent",
-              "failed",
-              null
-            ]
-          },
           "applicationType": {
             "type": "string",
             "const": "experienced"
+          },
+          "communityId": {
+            "$ref": "#/components/schemas/CommunityId"
+          },
+          "applicantUserId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "legacyReadOnly": {
+            "type": "boolean",
+            "const": false
+          },
+          "identitySnapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JoinIdentitySnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missingProviders": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "const": "cfx"
+            }
           }
         }
       },
@@ -4290,7 +7348,6 @@
         "additionalProperties": false,
         "required": [
           "application",
-          "invitation",
           "serverTime",
           "formVersion",
           "form",
@@ -4299,16 +7356,6 @@
         "properties": {
           "application": {
             "$ref": "#/components/schemas/JoinExperiencedApplicationSummary"
-          },
-          "invitation": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/InvitationSummary"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "serverTime": {
             "$ref": "#/components/schemas/SafeTimestamp"
@@ -4343,7 +7390,12 @@
           "reviewedByUserId",
           "invitationStatus",
           "deliveryStatus",
-          "applicationType"
+          "applicationType",
+          "communityId",
+          "applicantUserId",
+          "legacyReadOnly",
+          "identitySnapshot",
+          "missingProviders"
         ],
         "properties": {
           "id": {
@@ -4408,6 +7460,42 @@
           "applicationType": {
             "type": "string",
             "const": "legacy"
+          },
+          "communityId": {
+            "$ref": "#/components/schemas/CommunityId"
+          },
+          "applicantUserId": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legacyReadOnly": {
+            "type": "boolean",
+            "const": true
+          },
+          "identitySnapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JoinIdentitySnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missingProviders": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "const": "cfx"
+            }
           }
         }
       },
@@ -4468,247 +7556,24 @@
           }
         }
       },
-      "InvitationEligibilityRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "email"
-        ],
-        "properties": {
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          }
-        }
-      },
-      "InvitationCodeRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "email"
-        ],
-        "properties": {
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          }
-        }
-      },
-      "InvitationEligibility": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "status",
-          "email",
-          "serverTime",
-          "resendAvailableAt"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "const": "eligible"
-          },
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          },
-          "serverTime": {
-            "$ref": "#/components/schemas/SafeTimestamp"
-          },
-          "resendAvailableAt": {
-            "$ref": "#/components/schemas/SafeTimestamp"
-          }
-        }
-      },
-      "InvitationCodeAccepted": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "status",
-          "serverTime",
-          "resendAvailableAt"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "const": "accepted"
-          },
-          "serverTime": {
-            "$ref": "#/components/schemas/SafeTimestamp"
-          },
-          "resendAvailableAt": {
-            "$ref": "#/components/schemas/SafeTimestamp"
-          }
-        }
-      },
-      "InvitationVerifyRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "email",
-          "code"
-        ],
-        "properties": {
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          },
-          "code": {
-            "$ref": "#/components/schemas/VerificationCode"
-          }
-        }
-      },
-      "InvitationVerified": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "status",
-          "completionToken",
-          "email",
-          "nickname",
-          "serverTime",
-          "completionExpiresAt"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "const": "verified"
-          },
-          "completionToken": {
-            "$ref": "#/components/schemas/OpaqueIdentifier"
-          },
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          },
-          "nickname": {
-            "$ref": "#/components/schemas/Nickname"
-          },
-          "serverTime": {
-            "$ref": "#/components/schemas/SafeTimestamp"
-          },
-          "completionExpiresAt": {
-            "$ref": "#/components/schemas/SafeTimestamp"
-          }
-        }
-      },
-      "InvitationCompleteRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "completionToken",
-          "nickname",
-          "password"
-        ],
-        "properties": {
-          "completionToken": {
-            "$ref": "#/components/schemas/OpaqueIdentifier"
-          },
-          "nickname": {
-            "$ref": "#/components/schemas/Nickname"
-          },
-          "password": {
-            "$ref": "#/components/schemas/Password"
-          }
-        }
-      },
-      "InvitationRegistrationCompleted": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "status",
-          "email"
-        ],
-        "properties": {
-          "status": {
-            "type": "string",
-            "const": "registered"
-          },
-          "email": {
-            "$ref": "#/components/schemas/Email"
-          }
-        }
-      },
       "JoinApplicationSummary": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "email",
-          "nickname",
-          "qq",
-          "status",
-          "createdAt",
-          "reviewedAt",
-          "reviewedByUserId",
-          "invitationStatus",
-          "deliveryStatus",
-          "applicationType"
-        ],
-        "properties": {
-          "id": {
-            "$ref": "#/components/schemas/Uuid"
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/JoinNewApplicationSummary"
           },
-          "email": {
-            "$ref": "#/components/schemas/Email"
+          {
+            "$ref": "#/components/schemas/JoinHistoricalNewApplicationSummary"
           },
-          "nickname": {
-            "$ref": "#/components/schemas/Nickname"
+          {
+            "$ref": "#/components/schemas/JoinExperiencedApplicationSummary"
           },
-          "qq": {
-            "type": "string",
-            "pattern": "^[0-9]{1,20}$"
+          {
+            "$ref": "#/components/schemas/JoinHistoricalExperiencedApplicationSummary"
           },
-          "status": {
-            "type": "string",
-            "enum": [
-              "pending",
-              "approved",
-              "rejected"
-            ]
-          },
-          "createdAt": {
-            "$ref": "#/components/schemas/SafeTimestamp"
-          },
-          "reviewedAt": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "minimum": 0,
-            "maximum": 9007199254740991
-          },
-          "reviewedByUserId": {
-            "$ref": "#/components/schemas/NullableUuid"
-          },
-          "invitationStatus": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "active",
-              "expired",
-              "completed",
-              null
-            ]
-          },
-          "deliveryStatus": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "pending",
-              "sent",
-              "failed",
-              null
-            ]
-          },
-          "applicationType": {
-            "type": "string",
-            "enum": [
-              "new",
-              "experienced",
-              "legacy"
-            ]
+          {
+            "$ref": "#/components/schemas/JoinLegacyApplicationSummary"
           }
-        }
+        ]
       },
       "InvitationDeliverySummary": {
         "type": "object",
@@ -4811,18 +7676,24 @@
         }
       },
       "JoinApplicationDetail": {
-        "description": "Strict type/version/form/attachment pairing. Legacy is version 0, null form, no attachments. Corrupted version 1 records are never downgraded.",
         "oneOf": [
           {
             "$ref": "#/components/schemas/JoinNewApplicationDetail"
           },
           {
+            "$ref": "#/components/schemas/JoinHistoricalNewApplicationDetail"
+          },
+          {
             "$ref": "#/components/schemas/JoinExperiencedApplicationDetail"
+          },
+          {
+            "$ref": "#/components/schemas/JoinHistoricalExperiencedApplicationDetail"
           },
           {
             "$ref": "#/components/schemas/JoinLegacyApplicationDetail"
           }
-        ]
+        ],
+        "description": "Strict live/historical type and form version pairing. Historical records are read-only even when their formVersion is 1."
       },
       "JoinApplicationList": {
         "type": "object",
@@ -7141,6 +10012,1166 @@
             "maxItems": 5,
             "items": {
               "$ref": "#/components/schemas/FeedbackAttachment"
+            }
+          }
+        }
+      },
+      "RequestRegistrationCodeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          }
+        }
+      },
+      "VerifyRegistrationCodeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "challengeId",
+          "code"
+        ],
+        "properties": {
+          "challengeId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "code": {
+            "$ref": "#/components/schemas/VerificationCode"
+          }
+        }
+      },
+      "CompletePublicRegistrationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "registrationToken",
+          "nickname",
+          "password"
+        ],
+        "properties": {
+          "registrationToken": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "nickname": {
+            "$ref": "#/components/schemas/Nickname"
+          },
+          "password": {
+            "$ref": "#/components/schemas/Password"
+          }
+        }
+      },
+      "RegistrationCodeRequested": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "challengeId",
+          "serverTime",
+          "resendAvailableAt"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "accepted"
+          },
+          "challengeId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "serverTime": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "resendAvailableAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "RegistrationGrant": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "registrationToken",
+          "email",
+          "expiresAt"
+        ],
+        "properties": {
+          "registrationToken": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "RegistrationResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "userId",
+          "email"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "registered"
+          },
+          "userId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          }
+        }
+      },
+      "CfxSignInRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identityTicket"
+        ],
+        "properties": {
+          "identityTicket": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          }
+        }
+      },
+      "CfxSignInResult": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "token",
+              "expiresAt"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "signed-in"
+              },
+              "token": {
+                "$ref": "#/components/schemas/OpaqueIdentifier"
+              },
+              "expiresAt": {
+                "$ref": "#/components/schemas/SafeTimestamp"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "registrationToken",
+              "email",
+              "suggestedNickname",
+              "expiresAt"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "registration-required"
+              },
+              "registrationToken": {
+                "$ref": "#/components/schemas/OpaqueIdentifier"
+              },
+              "email": {
+                "$ref": "#/components/schemas/Email"
+              },
+              "suggestedNickname": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Nickname"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "expiresAt": {
+                "$ref": "#/components/schemas/SafeTimestamp"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "email",
+              "nextAction"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "const": "account-exists"
+              },
+              "email": {
+                "$ref": "#/components/schemas/Email"
+              },
+              "nextAction": {
+                "type": "string",
+                "const": "login_then_link"
+              }
+            }
+          }
+        ]
+      },
+      "IdentityProvider": {
+        "type": "string",
+        "enum": [
+          "cfx",
+          "google",
+          "qq"
+        ]
+      },
+      "IdentityLink": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "provider",
+          "externalUserId",
+          "externalUsername",
+          "providerEmail",
+          "linkedAt"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "provider": {
+            "type": "string",
+            "const": "cfx"
+          },
+          "externalUserId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$",
+            "maxLength": 16
+          },
+          "externalUsername": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\u0000-\\u001F\\u007F]+$"
+          },
+          "providerEmail": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "linkedAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "IdentityLinksResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "providers"
+        ],
+        "properties": {
+          "providers": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "provider",
+                    "available",
+                    "link"
+                  ],
+                  "properties": {
+                    "provider": {
+                      "type": "string",
+                      "const": "cfx"
+                    },
+                    "available": {
+                      "type": "boolean"
+                    },
+                    "link": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/IdentityLink"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "provider",
+                    "available",
+                    "link"
+                  ],
+                  "properties": {
+                    "provider": {
+                      "type": "string",
+                      "const": "google"
+                    },
+                    "available": {
+                      "type": "boolean",
+                      "const": false
+                    },
+                    "link": {
+                      "type": "null"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "provider",
+                    "available",
+                    "link"
+                  ],
+                  "properties": {
+                    "provider": {
+                      "type": "string",
+                      "const": "qq"
+                    },
+                    "available": {
+                      "type": "boolean",
+                      "const": false
+                    },
+                    "link": {
+                      "type": "null"
+                    }
+                  }
+                }
+              ]
+            },
+            "description": "Exactly one entry for each provider, in cfx, google, qq order. Order is enforced by the raw handler and HTTP response tests. Google and QQ are disabled and unlinked.",
+            "not": {
+              "anyOf": [
+                {
+                  "not": {
+                    "contains": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "provider",
+                        "available",
+                        "link"
+                      ],
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "const": "cfx"
+                        },
+                        "available": {
+                          "type": "boolean"
+                        },
+                        "link": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/IdentityLink"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "not": {
+                    "contains": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "provider",
+                        "available",
+                        "link"
+                      ],
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "const": "google"
+                        },
+                        "available": {
+                          "type": "boolean",
+                          "const": false
+                        },
+                        "link": {
+                          "type": "null"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "not": {
+                    "contains": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "provider",
+                        "available",
+                        "link"
+                      ],
+                      "properties": {
+                        "provider": {
+                          "type": "string",
+                          "const": "qq"
+                        },
+                        "available": {
+                          "type": "boolean",
+                          "const": false
+                        },
+                        "link": {
+                          "type": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "LinkMyCfxIdentityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attemptId",
+          "identityTicket"
+        ],
+        "properties": {
+          "attemptId": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          },
+          "identityTicket": {
+            "$ref": "#/components/schemas/OpaqueIdentifier"
+          }
+        }
+      },
+      "UnlinkIdentityResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "unlinked"
+          }
+        }
+      },
+      "CommunityId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "Community": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "displayName",
+          "requiresCfx",
+          "configRevision"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/CommunityId"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "requiresCfx": {
+            "type": "boolean"
+          },
+          "configRevision": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "CreateCommunityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "displayName",
+          "requiresCfx"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/CommunityId"
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "requiresCfx": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateCommunityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "displayName",
+          "requiresCfx",
+          "expectedRevision"
+        ],
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "requiresCfx": {
+            "type": "boolean"
+          },
+          "expectedRevision": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "CommunityList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Community"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "offset": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "total": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "MyCommunityApplication": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "createdAt",
+          "reviewedAt"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ]
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "reviewedAt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SafeTimestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "MyCommunityMembership": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "applicationId",
+          "joinedAt"
+        ],
+        "properties": {
+          "applicationId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "joinedAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "MyCommunityStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "communityId",
+          "application",
+          "membership",
+          "requiredProviders",
+          "missingProviders",
+          "requirementsMet",
+          "websiteReady"
+        ],
+        "properties": {
+          "communityId": {
+            "$ref": "#/components/schemas/CommunityId"
+          },
+          "application": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MyCommunityApplication"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "membership": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MyCommunityMembership"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requiredProviders": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "const": "cfx"
+            }
+          },
+          "missingProviders": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "const": "cfx"
+            }
+          },
+          "requirementsMet": {
+            "type": "boolean"
+          },
+          "websiteReady": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MyCommunityStatusList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyCommunityStatus"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "offset": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "total": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "CommunityReviewAccess": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "isPlatformAdmin",
+          "communities"
+        ],
+        "properties": {
+          "isPlatformAdmin": {
+            "type": "boolean"
+          },
+          "communities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Community"
+            }
+          }
+        }
+      },
+      "CommunityReviewer": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userId",
+          "nickname",
+          "grantedByUserId",
+          "grantedAt"
+        ],
+        "properties": {
+          "userId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "nickname": {
+            "$ref": "#/components/schemas/Nickname"
+          },
+          "grantedByUserId": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "grantedAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "CommunityReviewerList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommunityReviewer"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "offset": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "total": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "RevokeCommunityReviewerResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "revoked"
+          }
+        }
+      },
+      "JoinIdentitySnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "provider",
+          "externalUserId",
+          "externalUsername",
+          "linkedAt"
+        ],
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "cfx"
+          },
+          "externalUserId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{0,15}$",
+            "maxLength": 16
+          },
+          "externalUsername": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\u0000-\\u001F\\u007F]+$"
+          },
+          "linkedAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          }
+        }
+      },
+      "JoinHistoricalNewApplicationSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "email",
+          "nickname",
+          "qq",
+          "status",
+          "createdAt",
+          "reviewedAt",
+          "reviewedByUserId",
+          "invitationStatus",
+          "deliveryStatus",
+          "applicationType",
+          "communityId",
+          "applicantUserId",
+          "legacyReadOnly",
+          "identitySnapshot",
+          "missingProviders"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "nickname": {
+            "$ref": "#/components/schemas/Nickname"
+          },
+          "qq": {
+            "type": "string",
+            "pattern": "^[0-9]{1,20}$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ]
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "reviewedAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reviewedByUserId": {
+            "$ref": "#/components/schemas/NullableUuid"
+          },
+          "invitationStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "active",
+              "expired",
+              "completed",
+              null
+            ]
+          },
+          "deliveryStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "pending",
+              "sent",
+              "failed",
+              null
+            ]
+          },
+          "applicationType": {
+            "type": "string",
+            "const": "new"
+          },
+          "communityId": {
+            "$ref": "#/components/schemas/CommunityId"
+          },
+          "applicantUserId": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legacyReadOnly": {
+            "type": "boolean",
+            "const": true
+          },
+          "identitySnapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JoinIdentitySnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missingProviders": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "const": "cfx"
+            }
+          }
+        }
+      },
+      "JoinHistoricalNewApplicationDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "application",
+          "invitation",
+          "serverTime",
+          "formVersion",
+          "form",
+          "attachments"
+        ],
+        "properties": {
+          "application": {
+            "$ref": "#/components/schemas/JoinHistoricalNewApplicationSummary"
+          },
+          "invitation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InvitationSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "serverTime": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "formVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "form": {
+            "$ref": "#/components/schemas/JoinNewForm"
+          },
+          "attachments": {
+            "type": "array",
+            "maxItems": 0,
+            "items": {
+              "$ref": "#/components/schemas/JoinApplicationAttachment"
+            }
+          }
+        }
+      },
+      "JoinHistoricalExperiencedApplicationSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "email",
+          "nickname",
+          "qq",
+          "status",
+          "createdAt",
+          "reviewedAt",
+          "reviewedByUserId",
+          "invitationStatus",
+          "deliveryStatus",
+          "applicationType",
+          "communityId",
+          "applicantUserId",
+          "legacyReadOnly",
+          "identitySnapshot",
+          "missingProviders"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/Uuid"
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "nickname": {
+            "$ref": "#/components/schemas/Nickname"
+          },
+          "qq": {
+            "type": "string",
+            "pattern": "^[0-9]{1,20}$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ]
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "reviewedAt": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reviewedByUserId": {
+            "$ref": "#/components/schemas/NullableUuid"
+          },
+          "invitationStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "active",
+              "expired",
+              "completed",
+              null
+            ]
+          },
+          "deliveryStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "pending",
+              "sent",
+              "failed",
+              null
+            ]
+          },
+          "applicationType": {
+            "type": "string",
+            "const": "experienced"
+          },
+          "communityId": {
+            "$ref": "#/components/schemas/CommunityId"
+          },
+          "applicantUserId": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "legacyReadOnly": {
+            "type": "boolean",
+            "const": true
+          },
+          "identitySnapshot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JoinIdentitySnapshot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "missingProviders": {
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 1,
+            "items": {
+              "type": "string",
+              "const": "cfx"
+            }
+          }
+        }
+      },
+      "JoinHistoricalExperiencedApplicationDetail": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "application",
+          "invitation",
+          "serverTime",
+          "formVersion",
+          "form",
+          "attachments"
+        ],
+        "properties": {
+          "application": {
+            "$ref": "#/components/schemas/JoinHistoricalExperiencedApplicationSummary"
+          },
+          "invitation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InvitationSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "serverTime": {
+            "$ref": "#/components/schemas/SafeTimestamp"
+          },
+          "formVersion": {
+            "type": "integer",
+            "const": 1
+          },
+          "form": {
+            "$ref": "#/components/schemas/JoinExperiencedForm"
+          },
+          "attachments": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+              "$ref": "#/components/schemas/JoinApplicationAttachment"
             }
           }
         }

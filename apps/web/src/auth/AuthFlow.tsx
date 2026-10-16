@@ -9,7 +9,12 @@ import {
 } from '@workspace/components'
 import { api } from '@web/src/api/client'
 import { ExAxiosError } from '@workspace/sdk/http/browser'
-import { readToken, writeSsoSuccess, writeToken } from '@web/src/auth/storage'
+import { readToken, writeSsoSuccess } from '@web/src/auth/storage'
+import type { components } from '@workspace/api-client'
+import { installBrowserSession } from './session-install'
+import { useThirdPartySignIn, type ThirdPartySignInPresentation } from './useThirdPartySignIn'
+import { CfxAuthorization } from '@web/src/registration/CfxAuthorization'
+import { PublicRegistrationFlow } from '@web/src/registration/PublicRegistrationFlow'
 
 export interface AuthFlowProps {
   initialMode?: 'login'
@@ -39,9 +44,38 @@ export function AuthFlow({
   const [email, setEmail] = useState(initialEmail)
   const [fatalSsoError, setFatalSsoError] = useState<string | null>(null)
   const [ssoRetryError, setSsoRetryError] = useState<string | null>(null)
+  const [cfxBusy,setCfxBusy] = useState(false)
+  const [cfxEpoch,setCfxEpoch] = useState(0)
+  const [cfxNotice,setCfxNotice] = useState<string|null>(null)
+  const [cfxGrant,setCfxGrant] = useState<Extract<components['schemas']['CfxSignInResult'],{kind:'registration-required'}>|null>(null)
   const generation = useRef(0)
+  const cfxVersion = useRef(0)
   const authForm = useRef<AuthFormHandle>(null)
   const pendingDraft = useRef<LoginDraft | null>(null)
+  const passwordInstalling = useRef<{ oldToken: string | null | undefined; newToken?: string } | null>(null)
+  const thirdParty = useThirdPartySignIn(() => {
+    generation.current += 1
+    pendingDraft.current = null
+    setCfxGrant(null)
+    setEmail('')
+    setStep('credentials')
+    setFlowBusy(false)
+    setCfxBusy(false)
+    setCfxEpoch(value => value + 1)
+    setCfxNotice('登录状态已变化，请重新开始')
+  }, (token, source) => {
+    const installing = passwordInstalling.current
+    return !!installing && (
+      (source === 'write' && installing.newToken !== undefined && token === installing.newToken)
+      || (source === 'http' && token === null && installing.oldToken !== null && installing.oldToken !== undefined)
+    )
+  })
+  const cfxPresentation: ThirdPartySignInPresentation = {
+    onSignedIn: finishInstalledSession,
+    onRegistrationRequired: grant => { pendingDraft.current = null; setCfxGrant(grant) },
+    onAccountExists: targetEmail => { setEmail(targetEmail); setCfxNotice('该邮箱已有账号，请登录后在设置中主动关联 Cfx。') },
+    onFailure: setCfxNotice,
+  }
 
   useEffect(() => () => {
     generation.current += 1
@@ -49,6 +83,8 @@ export function AuthFlow({
   }, [])
 
   function continueLogin(draft: LoginDraft) {
+    thirdParty.invalidate()
+    generation.current += 1
     pendingDraft.current = draft
     setEmail(draft.email)
     setStep('captcha')
@@ -70,6 +106,7 @@ export function AuthFlow({
   }, [ssoRequestId])
 
   async function prepareSso(requestId: string, current: number) {
+    thirdParty.invalidate()
     setFatalSsoError(null)
     setSsoRetryError(null)
     setFlowBusy(true)
@@ -106,6 +143,11 @@ export function AuthFlow({
 
   async function submitLogin(draft: LoginDraft) {
     const current = ++generation.current
+    thirdParty.invalidate()
+    let oldToken: string | null | undefined
+    try { oldToken = readToken(window.localStorage) } catch { oldToken = undefined }
+    const passwordAttempt = { oldToken }
+    passwordInstalling.current = passwordAttempt
     authForm.current?.clearServerErrors()
     try {
       if (ssoRequestId !== undefined) {
@@ -121,63 +163,58 @@ export function AuthFlow({
         body: { email: draft.email, password: draft.password }, alert: false,
       })
       if (current !== generation.current) return
-      let oldToken: string | null
-      try {
-        oldToken = readToken(window.localStorage)
-      } catch {
-        authForm.current?.setServerErrors({ form: '浏览器无法读取登录信息，请检查存储设置后重试' })
-        return
-      }
-      if (oldToken !== null && oldToken !== result.token) {
-        try {
-          await api.POST('/auth/logout', {
-            headers: { Authorization: `Bearer ${oldToken}` }, alert: false,
-          })
-          if (current !== generation.current) return
-        } catch (error) {
-          if (current !== generation.current) return
-          if (!(error instanceof ExAxiosError && error.code === 'SESSION_INVALID')) {
-            authForm.current?.setServerErrors({ form: '旧账号退出失败，请重试登录' })
-            return
-          }
-          // ExAxios may already have removed this expired token; never accept a replacement token.
-          if (readToken(window.localStorage) === null) oldToken = null
-        }
-      }
-      try {
-        if (readToken(window.localStorage) !== oldToken) {
-          authForm.current?.setServerErrors({ form: '登录状态已在其他页面更改，请重试' })
-          return
-        }
-        writeToken(window.localStorage, result.token)
-      } catch {
-        authForm.current?.setServerErrors({ form: '浏览器无法保存登录信息，请检查存储设置后重试' })
-        return
-      }
-      if (onSessionCreated) {
-        onSessionCreated(result.token)
-        return
-      }
-      onFinished?.()
-      if (presentation === 'modal') {
-        window.location.reload()
-      } else {
-        window.location.replace('/')
-      }
+      await acceptSession(result.token,current)
     } catch (error) {
       if (current !== generation.current) return
       if (error instanceof ExAxiosError) {
         if (isFatalSsoCode(error.code)) setFatalSsoError(error.message)
         else authForm.current?.setServerErrors(mapError(error.code, error.message))
       } else authForm.current?.setServerErrors({ form: '暂时无法连接认证服务，请重试' })
+    } finally {
+      if (passwordInstalling.current === passwordAttempt) passwordInstalling.current = null
     }
+  }
+
+  async function acceptSession(token:string,current:number,signal?:AbortSignal) {
+    let oldToken:string|null|undefined
+    try { oldToken=readToken(window.localStorage) } catch { oldToken=undefined }
+    const installing={oldToken,newToken:token}
+    passwordInstalling.current=installing
+    let installed:Awaited<ReturnType<typeof installBrowserSession>>
+    try { installed=await installBrowserSession(token,()=>current===generation.current&&!signal?.aborted) }
+    finally { if(passwordInstalling.current===installing)passwordInstalling.current=null }
+    if(installed.status==='failed'){authForm.current?.setServerErrors({form:installed.message});return}
+    if(installed.status!=='installed')return
+    if(onSessionCreated){onSessionCreated(token);return}
+    onFinished?.()
+    if(presentation==='modal')window.location.reload()
+    else window.location.replace('/')
+  }
+  async function cfx(ticket:string,_attemptId:string,signal:AbortSignal) {
+    const current=++generation.current
+    cfxVersion.current=current
+    setCfxNotice(null)
+    await thirdParty.runCfxTicket(ticket,signal,()=>current===generation.current,cfxPresentation)
+  }
+
+  function finishInstalledSession(token:string) {
+    if(onSessionCreated){onSessionCreated(token);return}
+    onFinished?.()
+    if(presentation==='modal')window.location.reload()
+    else window.location.replace('/')
+  }
+
+  async function retryCfxInstallation() {
+    const current=cfxVersion.current
+    await thirdParty.retrySessionInstallation(()=>current===generation.current,cfxPresentation)
   }
 
   function join() {
     generation.current += 1
+    thirdParty.invalidate()
     pendingDraft.current = null
     if (onJoin) onJoin()
-    else navigate('/join/rifling-911')
+    else navigate('/register')
   }
 
   function finishSso(requestId: string) {
@@ -193,6 +230,9 @@ export function AuthFlow({
   }
 
   const visibleFooter = step === 'captcha' ? null : footer
+
+  if(cfxGrant!==null&&ssoRequestId===undefined)return <PublicRegistrationFlow presentation={presentation} initialGrant={cfxGrant} onSessionCreated={onSessionCreated}
+    onLogin={targetEmail=>{thirdParty.invalidate();generation.current+=1;setCfxGrant(null);setEmail(targetEmail);setStep('credentials')}}/>
 
   if (fatalSsoError !== null) {
     return <><Alert variant="destructive" role="alert"><AlertDescription>{fatalSsoError}</AlertDescription></Alert>{visibleFooter}</>
@@ -215,15 +255,19 @@ export function AuthFlow({
   return (
     <>
       <AuthForm
+      key={email}
       ref={authForm}
       step={step}
-      busy={flowBusy}
+      busy={flowBusy||cfxBusy||thirdParty.busy}
       initialEmail={email}
       description={description}
       onContinueLogin={continueLogin}
       onCaptchaSubmit={submitCaptcha}
       onJoin={join}
       />
+      {cfxNotice&&<p role="status">{cfxNotice}</p>}
+      {thirdParty.outcome?.kind==='failed'&&thirdParty.outcome.retryInstallation&&<Button type="button" disabled={thirdParty.busy} onClick={()=>void retryCfxInstallation()}>重试完成登录</Button>}
+      {ssoRequestId===undefined&&step==='credentials'&&<CfxAuthorization key={cfxEpoch} disabled={flowBusy||thirdParty.busy} onActiveChange={setCfxBusy} onTicket={cfx}/>}
       {visibleFooter}
     </>
   )

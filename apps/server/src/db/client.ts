@@ -72,6 +72,7 @@ export function safeInteger(value: string | number, column: string): number {
 }
 
 const millisecondColumns = new Set([
+  'linked_at', 'joined_at', 'granted_at', 'processing_started_at', 'consumed_at',
   'created_at', 'expires_at', 'revoked_at', 'completed_at', 'reviewed_at',
   'issued_at', 'code_expires_at', 'completion_expires_at', 'next_send_at',
   'failure_window_started_at', 'started_at', 'finished_at', 'n',

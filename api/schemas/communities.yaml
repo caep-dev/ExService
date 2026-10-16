@@ -1,0 +1,235 @@
+CommunityId:
+  type: string
+  minLength: 1
+  maxLength: 64
+  pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+Community:
+  type: object
+  additionalProperties: false
+  required:
+    - id
+    - displayName
+    - requiresCfx
+    - configRevision
+  properties:
+    id:
+      $ref: ../openapi.yaml#/components/schemas/CommunityId
+    displayName:
+      type: string
+      minLength: 1
+      maxLength: 80
+    requiresCfx:
+      type: boolean
+    configRevision: &a1
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
+CreateCommunityRequest:
+  type: object
+  additionalProperties: false
+  required:
+    - id
+    - displayName
+    - requiresCfx
+  properties:
+    id:
+      $ref: ../openapi.yaml#/components/schemas/CommunityId
+    displayName:
+      type: string
+      minLength: 1
+      maxLength: 80
+    requiresCfx:
+      type: boolean
+UpdateCommunityRequest:
+  type: object
+  additionalProperties: false
+  required:
+    - displayName
+    - requiresCfx
+    - expectedRevision
+  properties:
+    displayName:
+      type: string
+      minLength: 1
+      maxLength: 80
+    requiresCfx:
+      type: boolean
+    expectedRevision: *a1
+CommunityList:
+  type: object
+  additionalProperties: false
+  required:
+    - items
+    - limit
+    - offset
+    - total
+  properties:
+    items:
+      type: array
+      items:
+        $ref: ../openapi.yaml#/components/schemas/Community
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 50
+    offset: *a1
+    total: *a1
+MyCommunityApplication:
+  type: object
+  additionalProperties: false
+  required:
+    - id
+    - status
+    - createdAt
+    - reviewedAt
+  properties:
+    id: &a2
+      $ref: ../openapi.yaml#/components/schemas/Uuid
+    status:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+    createdAt: *a1
+    reviewedAt:
+      anyOf:
+        - *a1
+        - type: "null"
+MyCommunityMembership:
+  type: object
+  additionalProperties: false
+  required:
+    - applicationId
+    - joinedAt
+  properties:
+    applicationId: *a2
+    joinedAt: *a1
+MyCommunityStatus:
+  type: object
+  additionalProperties: false
+  required:
+    - communityId
+    - application
+    - membership
+    - requiredProviders
+    - missingProviders
+    - requirementsMet
+    - websiteReady
+  properties:
+    communityId:
+      $ref: ../openapi.yaml#/components/schemas/CommunityId
+    application:
+      anyOf:
+        - $ref: ../openapi.yaml#/components/schemas/MyCommunityApplication
+        - type: "null"
+    membership:
+      anyOf:
+        - $ref: ../openapi.yaml#/components/schemas/MyCommunityMembership
+        - type: "null"
+    requiredProviders: &a3
+      type: array
+      uniqueItems: true
+      maxItems: 1
+      items:
+        type: string
+        const: cfx
+    missingProviders: *a3
+    requirementsMet:
+      type: boolean
+    websiteReady:
+      type: boolean
+MyCommunityStatusList:
+  type: object
+  additionalProperties: false
+  required:
+    - items
+    - limit
+    - offset
+    - total
+  properties:
+    items:
+      type: array
+      items:
+        $ref: ../openapi.yaml#/components/schemas/MyCommunityStatus
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 50
+    offset: *a1
+    total: *a1
+CommunityReviewAccess:
+  type: object
+  additionalProperties: false
+  required:
+    - isPlatformAdmin
+    - communities
+  properties:
+    isPlatformAdmin:
+      type: boolean
+    communities:
+      type: array
+      items:
+        $ref: ../openapi.yaml#/components/schemas/Community
+CommunityReviewer:
+  type: object
+  additionalProperties: false
+  required:
+    - userId
+    - nickname
+    - grantedByUserId
+    - grantedAt
+  properties:
+    userId: *a2
+    nickname:
+      $ref: ../openapi.yaml#/components/schemas/Nickname
+    grantedByUserId: *a2
+    grantedAt: *a1
+CommunityReviewerList:
+  type: object
+  additionalProperties: false
+  required:
+    - items
+    - limit
+    - offset
+    - total
+  properties:
+    items:
+      type: array
+      items:
+        $ref: ../openapi.yaml#/components/schemas/CommunityReviewer
+    limit:
+      type: integer
+      minimum: 1
+      maximum: 50
+    offset: *a1
+    total: *a1
+RevokeCommunityReviewerResult:
+  type: object
+  additionalProperties: false
+  required:
+    - status
+  properties:
+    status:
+      type: string
+      const: revoked
+JoinIdentitySnapshot:
+  type: object
+  additionalProperties: false
+  required:
+    - provider
+    - externalUserId
+    - externalUsername
+    - linkedAt
+  properties:
+    provider:
+      type: string
+      const: cfx
+    externalUserId:
+      type: string
+      pattern: ^[1-9][0-9]{0,15}$
+      maxLength: 16
+    externalUsername:
+      type: string
+      minLength: 1
+      maxLength: 128
+      pattern: ^[^\u0000-\u001F\u007F]+$
+    linkedAt: *a1

@@ -9,7 +9,7 @@ export function nginxConfiguration(state) {
   const origin = new URL(state.config.publicOrigin), issuer = new URL(state.config.issuer)
   if (origin.hostname === issuer.hostname || origin.port || issuer.port) throw new RuntimeError('NGINX_DISTINCT_HTTPS_HOSTS_REQUIRED')
   const contract = readContract(join(state.workspace, 'api/generated/openapi.json'))
-  const joinBytes = contract.paths['/join/applications'].post['x-fastify-config'].joinUpload.wireBytes
+  const joinBytes = contract.paths['/communities/{communityId}/applications'].post['x-fastify-config'].joinUpload.wireBytes
   const supportBytes = contract.paths['/support/feedback/submissions/{submissionId}/attachments/{attachmentId}'].put['x-fastify-config'].supportUpload.wireBytes
   const overheadBytes = contract.paths['/storage/uploads'].post['x-fastify-config'].storageUpload.wireOverheadBytes
   // Match the storage parser's default; the proxy ceiling includes multipart metadata.

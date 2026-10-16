@@ -4,7 +4,7 @@ import { assertCommunitySchemaAvailable } from '@server/src/domains/community/sc
 import type { AppDatabase } from '@server/src/db/client.js'
 import { assertDatabaseReady } from '@server/src/db/schema-check.js'
 import { parseCorsAllowedOrigins } from '@server/src/http/cors.js'
-import { publicWebBaseUrl } from '@server/src/domains/join/invitations/mail.js'
+import { publicWebBaseUrl } from '@server/src/http/public-origin.js'
 import { assertJoinSchemaAvailable } from '@server/src/domains/join/applications/schema-check.js'
 import { parseStorageConfig } from '@server/src/modules/storage/config.js'
 import { avatarDirectory, publicAvatarBaseUrl } from '@server/src/modules/profile/service.js'

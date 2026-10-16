@@ -38,6 +38,8 @@ Build 只读取工具和固定公开编译设置，生成 Contract 并构建 SDK
 
 运行输出由 `scripts/runtime/output.mjs` 统一呈现服务状态、地址、错误检查项和下一步。颜色仅用于交互终端，非空 `NO_COLOR`、`TERM=dumb` 或 `FORCE_COLOR=0` 禁用颜色；状态同时保留符号与中文文字。终端持续日志默认使用本地短时间，`--verbose` 使用完整 ISO 时间；开发日志在同一次脱敏后分流保存为含 ISO 时间的纯文本，ANSI 配色不进入日志文件。开发就绪摘要在真实 readiness 通过并保存 ready 状态后输出；`service:status` 只呈现 Docker 容器与其健康检查状态，不把缺少容器健康检查等同于应用健康通过。
 
+开发邮件模拟器的 `[registration-mail:development]` 通道包含可用验证码。运行输出仅在显式启用 `SERVER_REGISTRATION_MAIL_SIMULATOR=true` 且输出终端可交互时显示邮件内容；持久日志与非交互输出只保留通道及隐藏提示，失败阶段重放缓冲日志也遵守此规则。直接启动 Server 时的 stderr 是模拟器原始传输，不能将它重定向为测试邮件档案；日常开发使用根运行入口。
+
 Docker 调用将命令缺失、调用超时和已知引擎连接失败分别报告为 `DOCKER_NOT_FOUND`、`DOCKER_COMMAND_TIMEOUT`、`DOCKER_UNAVAILABLE`；其他失败保留 `DOCKER_COMMAND_FAILED`。引擎连接失败提示检查 `docker info`、Docker Desktop/daemon 和 `docker context show`，不回显原始 stderr。`service:status` 仅在成功查询并核验空项目清单后报告服务未创建，并提示检查 Docker 状态及显式启动；Docker 不可用时以失败退出，不能当作空清单。
 
 启动诊断直接给出服务、失败检查项、相关配置键与明确处理步骤，不把阅读文档作为恢复步骤。Website 检查 CLI 区分连接配置、认证、缺库、DNS/网络和结构未就绪；Hydra 区分缺失 client、配置冲突与网络故障。未知异常不回显原始消息，HTTP 错误 envelope 保持原 Contract。只读检查失败不能自动迁移、创建账号或覆盖身份。

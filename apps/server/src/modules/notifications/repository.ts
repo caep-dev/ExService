@@ -528,6 +528,12 @@ export class NotificationRepository {
     return new Set(result.rows.map(row => row.id))
   }
 
+  /** Result-event snapshots retain disabled applicants; ordinary audience selection remains active-only. */
+  async existingUserIds(userIds: readonly string[], executor: SqlExecutor): Promise<Set<string>> {
+    const result = await executor.query<{ id: string }>('SELECT id FROM auth_users WHERE id = ANY($1::text[])', [[...userIds]])
+    return new Set(result.rows.map(row => row.id))
+  }
+
   async isAdminUser(userId: string, executor: SqlExecutor = this.db): Promise<boolean> {
     const result = await executor.query(
       `SELECT 1 FROM community_group_memberships WHERE user_id = $1 AND group_code = 'admin'`, [userId])

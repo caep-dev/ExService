@@ -49,6 +49,10 @@ function table(rows: number, columns: number, options: { caption?: boolean } = {
 }
 
 describe('服务端接受的正文，客户端必须能渲染', () => {
+  it('本人申请结果链接只允许固定页面，不接受邮箱或凭证 query', () => {
+    expect(roundTrip('<p><a href="/join/result">查看申请结果</a></p>')).toMatchObject({serverAccepted:true,clientRenderable:true})
+    expect(roundTrip('<p><a href="/join/result?email=other@example.com">查看</a></p>')).toMatchObject({serverAccepted:false,clientRenderable:false})
+  })
   // 5 个形状来自独立评审的失败探针；20×6 是设计 4.2 的上限（120 个单元格）。
   const legalTables: readonly [number, number][] = [
     [2, 3], [3, 3], [4, 2], [2, 6], [7, 2], [20, 6], [1, 1],

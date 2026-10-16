@@ -41,8 +41,14 @@ describe('SettingsPanel', () => {
     const categories = screen.getByRole('navigation', { name: '设置分类' })
       .querySelectorAll('button')
     expect(Array.from(categories, (button) => button.textContent))
-      .toEqual(['个人资料', '通用', '通知', '账号'])
+      .toEqual(['个人资料', '通用', '通知', '账号', '关联账户'])
     expect(screen.getByRole('button', { name: '通用' }).getAttribute('aria-current')).toBe('page')
+  })
+
+  it('shows the independent identity-links slot even when profile data failed',()=>{
+    render(<SettingsPanel {...props({category:'identity-links',profile:null,profileStatus:'error',profileError:'profile unavailable',identityLinks:<p>身份关联内容</p>})}/> )
+    expect(screen.getByText('身份关联内容')).toBeTruthy()
+    expect(screen.queryByText('profile unavailable')).toBeNull()
   })
 
   it('offers mobile category selection and logout from the top menu', async () => {

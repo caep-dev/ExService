@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: ExWebsite Server API
-  version: 0.6.0
+  version: 0.7.0
   description: |
     Frontend 与 Backend 之间的唯一 HTTP API Contract。
 
@@ -24,34 +24,18 @@ tags:
   - name: support
     description: 登录用户的反馈提交与恢复。
 paths:
+  /auth/cfx/attempts:
+    $ref: ./paths/cfx.yaml#/~1auth~1cfx~1attempts
+  /auth/cfx/attempts/{id}/complete:
+    $ref: ./paths/cfx.yaml#/~1auth~1cfx~1attempts~1{id}~1complete
+  /auth/cfx/callback:
+    $ref: ./paths/cfx.yaml#/~1auth~1cfx~1callback
+  /auth/cfx/attempts/{id}:
+    $ref: ./paths/cfx.yaml#/~1auth~1cfx~1attempts~1{id}
   /health:
     $ref: ./paths/system.yaml#/~1health
   /auth/captcha/challenges:
     $ref: ./paths/auth.yaml#/~1auth~1captcha~1challenges
-  /join/applications:
-    $ref: ./paths/join.yaml#/~1join~1applications
-  /join/applications/query:
-    $ref: ./paths/join.yaml#/~1join~1applications~1query
-  /admin/join/applications:
-    $ref: ./paths/join.yaml#/~1admin~1join~1applications
-  /admin/join/applications/{applicationId}:
-    $ref: ./paths/join.yaml#/~1admin~1join~1applications~1{applicationId}
-  /admin/join/applications/{applicationId}/approve:
-    $ref: ./paths/join.yaml#/~1admin~1join~1applications~1{applicationId}~1approve
-  /admin/join/applications/{applicationId}/reject:
-    $ref: ./paths/join.yaml#/~1admin~1join~1applications~1{applicationId}~1reject
-  /admin/join/applications/{applicationId}/invitations:
-    $ref: ./paths/join.yaml#/~1admin~1join~1applications~1{applicationId}~1invitations
-  /admin/join/applications/{applicationId}/attachments/{attachmentId}:
-    $ref: ./paths/join.yaml#/~1admin~1join~1applications~1{applicationId}~1attachments~1{attachmentId}
-  /auth/invitations/check:
-    $ref: ./paths/join.yaml#/~1auth~1invitations~1check
-  /auth/invitations/code:
-    $ref: ./paths/join.yaml#/~1auth~1invitations~1code
-  /auth/invitations/verify:
-    $ref: ./paths/join.yaml#/~1auth~1invitations~1verify
-  /auth/invitations/complete:
-    $ref: ./paths/join.yaml#/~1auth~1invitations~1complete
   /auth/login:
     $ref: ./paths/auth.yaml#/~1auth~1login
   /auth/me:
@@ -118,6 +102,50 @@ paths:
     $ref: ./paths/support.yaml#/~1support~1feedback~1submissions~1{submissionId}~1attachments~1{attachmentId}
   /support/feedback/submissions/{submissionId}/advance:
     $ref: ./paths/support.yaml#/~1support~1feedback~1submissions~1{submissionId}~1advance
+  /auth/registration/code:
+    $ref: ./paths/registration.yaml#/~1auth~1registration~1code
+  /auth/registration/verify:
+    $ref: ./paths/registration.yaml#/~1auth~1registration~1verify
+  /auth/registrations:
+    $ref: ./paths/registration.yaml#/~1auth~1registrations
+  /auth/cfx/sign-in:
+    $ref: ./paths/registration.yaml#/~1auth~1cfx~1sign-in
+  /auth/me/identity-links:
+    $ref: ./paths/identity-links.yaml#/~1auth~1me~1identity-links
+  /auth/me/identity-links/cfx/attempts:
+    $ref: ./paths/identity-links.yaml#/~1auth~1me~1identity-links~1cfx~1attempts
+  /auth/me/identity-links/cfx:
+    $ref: ./paths/identity-links.yaml#/~1auth~1me~1identity-links~1cfx
+  /communities:
+    $ref: ./paths/communities.yaml#/~1communities
+  /communities/{communityId}:
+    $ref: ./paths/communities.yaml#/~1communities~1{communityId}
+  /auth/me/communities:
+    $ref: ./paths/communities.yaml#/~1auth~1me~1communities
+  /auth/me/communities/{communityId}:
+    $ref: ./paths/communities.yaml#/~1auth~1me~1communities~1{communityId}
+  /auth/me/review-access:
+    $ref: ./paths/communities.yaml#/~1auth~1me~1review-access
+  /admin/communities:
+    $ref: ./paths/communities.yaml#/~1admin~1communities
+  /admin/communities/{communityId}:
+    $ref: ./paths/communities.yaml#/~1admin~1communities~1{communityId}
+  /admin/communities/{communityId}/reviewers:
+    $ref: ./paths/communities.yaml#/~1admin~1communities~1{communityId}~1reviewers
+  /admin/communities/{communityId}/reviewers/{userId}:
+    $ref: ./paths/communities.yaml#/~1admin~1communities~1{communityId}~1reviewers~1{userId}
+  /communities/{communityId}/applications:
+    $ref: ./paths/join.yaml#/~1communities~1{communityId}~1applications
+  /admin/communities/{communityId}/applications:
+    $ref: ./paths/join.yaml#/~1admin~1communities~1{communityId}~1applications
+  /admin/communities/{communityId}/applications/{applicationId}:
+    $ref: ./paths/join.yaml#/~1admin~1communities~1{communityId}~1applications~1{applicationId}
+  /admin/communities/{communityId}/applications/{applicationId}/approve:
+    $ref: ./paths/join.yaml#/~1admin~1communities~1{communityId}~1applications~1{applicationId}~1approve
+  /admin/communities/{communityId}/applications/{applicationId}/reject:
+    $ref: ./paths/join.yaml#/~1admin~1communities~1{communityId}~1applications~1{applicationId}~1reject
+  /admin/communities/{communityId}/applications/{applicationId}/attachments/{attachmentId}:
+    $ref: ./paths/join.yaml#/~1admin~1communities~1{communityId}~1applications~1{applicationId}~1attachments~1{attachmentId}
 components:
   securitySchemes:
     bearerAuth:
@@ -141,6 +169,7 @@ components:
         minLength: 1
     CacheControl:
       description: Authentication responses are not cacheable.
+      required: true
       schema:
         type: string
         const: no-store
@@ -149,7 +178,7 @@ components:
       required: true
       schema:
         type: string
-        pattern: '^[1-9][0-9]*$'
+        pattern: ^[1-9][0-9]*$
     ContentDisposition:
       description: Always attachment; the filename is the last validated key segment, encoded as a quoted-string.
       schema:
@@ -164,27 +193,105 @@ components:
       description: Safe application error response
       headers:
         X-Request-Id:
-          $ref: '#/components/headers/RequestId'
+          $ref: "#/components/headers/RequestId"
         Cache-Control:
-          $ref: '#/components/headers/CacheControl'
+          $ref: "#/components/headers/CacheControl"
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
+            $ref: "#/components/schemas/ErrorEnvelope"
     RetryableErrorResponse:
       description: Safe application error response with a retry delay
       headers:
         X-Request-Id:
-          $ref: '#/components/headers/RequestId'
+          $ref: "#/components/headers/RequestId"
         Cache-Control:
-          $ref: '#/components/headers/CacheControl'
+          $ref: "#/components/headers/CacheControl"
         Retry-After:
-          $ref: '#/components/headers/RetryAfter'
+          $ref: "#/components/headers/RetryAfter"
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
+            $ref: "#/components/schemas/ErrorEnvelope"
+    CredentialErrorResponse:
+      description: Safe application error response
+      headers:
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+        Cache-Control:
+          required: true
+          schema:
+            type: string
+            const: no-store
+        Referrer-Policy:
+          required: true
+          schema:
+            type: string
+            const: no-referrer
+        X-Content-Type-Options:
+          required: true
+          schema:
+            type: string
+            const: nosniff
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    CredentialRetryableErrorResponse:
+      description: Safe application error response with a retry delay
+      headers:
+        X-Request-Id:
+          $ref: "#/components/headers/RequestId"
+        Cache-Control:
+          required: true
+          schema:
+            type: string
+            const: no-store
+        Retry-After:
+          $ref: "#/components/headers/RetryAfter"
+        Referrer-Policy:
+          required: true
+          schema:
+            type: string
+            const: no-referrer
+        X-Content-Type-Options:
+          required: true
+          schema:
+            type: string
+            const: nosniff
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
   schemas:
+    CfxIdentity:
+      $ref: ./schemas/cfx.yaml#/CfxIdentity
+    CfxMode:
+      $ref: ./schemas/cfx.yaml#/CfxMode
+    CfxPayload:
+      $ref: ./schemas/cfx.yaml#/CfxPayload
+    CfxEmptyRequest:
+      $ref: ./schemas/cfx.yaml#/CfxEmptyRequest
+    CfxCompleteRequest:
+      $ref: ./schemas/cfx.yaml#/CfxCompleteRequest
+    CfxAttemptCreated:
+      $ref: ./schemas/cfx.yaml#/CfxAttemptCreated
+    CfxCompletion:
+      $ref: ./schemas/cfx.yaml#/CfxCompletion
+    CfxCancellation:
+      $ref: ./schemas/cfx.yaml#/CfxCancellation
+    CfxFailureCode:
+      $ref: ./schemas/cfx.yaml#/CfxFailureCode
+    CfxPendingStatus:
+      $ref: ./schemas/cfx.yaml#/CfxPendingStatus
+    CfxReadyStatus:
+      $ref: ./schemas/cfx.yaml#/CfxReadyStatus
+    CfxFailedStatus:
+      $ref: ./schemas/cfx.yaml#/CfxFailedStatus
+    CfxTerminalStatus:
+      $ref: ./schemas/cfx.yaml#/CfxTerminalStatus
+    CfxAttemptStatus:
+      $ref: ./schemas/cfx.yaml#/CfxAttemptStatus
     OidcChallenge:
       $ref: ./schemas/identity.yaml#/OidcChallenge
     OidcInspectRequest:
@@ -259,10 +366,6 @@ components:
       $ref: ./schemas/join.yaml#/JoinExperiencedApplicationRequest
     JoinApplicationPayload:
       $ref: ./schemas/join.yaml#/JoinApplicationPayload
-    JoinApplicationQueryRequest:
-      $ref: ./schemas/join.yaml#/JoinApplicationQueryRequest
-    JoinApplicationResult:
-      $ref: ./schemas/join.yaml#/JoinApplicationResult
     JoinApplicationAttachment:
       $ref: ./schemas/join.yaml#/JoinApplicationAttachment
     JoinNewApplicationSummary:
@@ -279,22 +382,6 @@ components:
       $ref: ./schemas/join.yaml#/JoinLegacyApplicationDetail
     JoinApplicationReceived:
       $ref: ./schemas/join.yaml#/JoinApplicationReceived
-    InvitationEligibilityRequest:
-      $ref: ./schemas/join.yaml#/InvitationEligibilityRequest
-    InvitationCodeRequest:
-      $ref: ./schemas/join.yaml#/InvitationCodeRequest
-    InvitationEligibility:
-      $ref: ./schemas/join.yaml#/InvitationEligibility
-    InvitationCodeAccepted:
-      $ref: ./schemas/join.yaml#/InvitationCodeAccepted
-    InvitationVerifyRequest:
-      $ref: ./schemas/join.yaml#/InvitationVerifyRequest
-    InvitationVerified:
-      $ref: ./schemas/join.yaml#/InvitationVerified
-    InvitationCompleteRequest:
-      $ref: ./schemas/join.yaml#/InvitationCompleteRequest
-    InvitationRegistrationCompleted:
-      $ref: ./schemas/join.yaml#/InvitationRegistrationCompleted
     JoinApplicationSummary:
       $ref: ./schemas/join.yaml#/JoinApplicationSummary
     InvitationDeliverySummary:
@@ -454,3 +541,65 @@ components:
       $ref: ./schemas/support.yaml#/FeedbackAttachment
     FeedbackSnapshot:
       $ref: ./schemas/support.yaml#/FeedbackSnapshot
+    RequestRegistrationCodeRequest:
+      $ref: ./schemas/registration.yaml#/RequestRegistrationCodeRequest
+    VerifyRegistrationCodeRequest:
+      $ref: ./schemas/registration.yaml#/VerifyRegistrationCodeRequest
+    CompletePublicRegistrationRequest:
+      $ref: ./schemas/registration.yaml#/CompletePublicRegistrationRequest
+    RegistrationCodeRequested:
+      $ref: ./schemas/registration.yaml#/RegistrationCodeRequested
+    RegistrationGrant:
+      $ref: ./schemas/registration.yaml#/RegistrationGrant
+    RegistrationResult:
+      $ref: ./schemas/registration.yaml#/RegistrationResult
+    CfxSignInRequest:
+      $ref: ./schemas/registration.yaml#/CfxSignInRequest
+    CfxSignInResult:
+      $ref: ./schemas/registration.yaml#/CfxSignInResult
+    IdentityProvider:
+      $ref: ./schemas/identity-links.yaml#/IdentityProvider
+    IdentityLink:
+      $ref: ./schemas/identity-links.yaml#/IdentityLink
+    IdentityLinksResponse:
+      $ref: ./schemas/identity-links.yaml#/IdentityLinksResponse
+    LinkMyCfxIdentityRequest:
+      $ref: ./schemas/identity-links.yaml#/LinkMyCfxIdentityRequest
+    UnlinkIdentityResult:
+      $ref: ./schemas/identity-links.yaml#/UnlinkIdentityResult
+    CommunityId:
+      $ref: ./schemas/communities.yaml#/CommunityId
+    Community:
+      $ref: ./schemas/communities.yaml#/Community
+    CreateCommunityRequest:
+      $ref: ./schemas/communities.yaml#/CreateCommunityRequest
+    UpdateCommunityRequest:
+      $ref: ./schemas/communities.yaml#/UpdateCommunityRequest
+    CommunityList:
+      $ref: ./schemas/communities.yaml#/CommunityList
+    MyCommunityApplication:
+      $ref: ./schemas/communities.yaml#/MyCommunityApplication
+    MyCommunityMembership:
+      $ref: ./schemas/communities.yaml#/MyCommunityMembership
+    MyCommunityStatus:
+      $ref: ./schemas/communities.yaml#/MyCommunityStatus
+    MyCommunityStatusList:
+      $ref: ./schemas/communities.yaml#/MyCommunityStatusList
+    CommunityReviewAccess:
+      $ref: ./schemas/communities.yaml#/CommunityReviewAccess
+    CommunityReviewer:
+      $ref: ./schemas/communities.yaml#/CommunityReviewer
+    CommunityReviewerList:
+      $ref: ./schemas/communities.yaml#/CommunityReviewerList
+    RevokeCommunityReviewerResult:
+      $ref: ./schemas/communities.yaml#/RevokeCommunityReviewerResult
+    JoinIdentitySnapshot:
+      $ref: ./schemas/communities.yaml#/JoinIdentitySnapshot
+    JoinHistoricalNewApplicationSummary:
+      $ref: ./schemas/join.yaml#/JoinHistoricalNewApplicationSummary
+    JoinHistoricalNewApplicationDetail:
+      $ref: ./schemas/join.yaml#/JoinHistoricalNewApplicationDetail
+    JoinHistoricalExperiencedApplicationSummary:
+      $ref: ./schemas/join.yaml#/JoinHistoricalExperiencedApplicationSummary
+    JoinHistoricalExperiencedApplicationDetail:
+      $ref: ./schemas/join.yaml#/JoinHistoricalExperiencedApplicationDetail

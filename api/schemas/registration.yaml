@@ -1,0 +1,127 @@
+RequestRegistrationCodeRequest:
+  type: object
+  additionalProperties: false
+  required:
+    - email
+  properties:
+    email: &a4
+      $ref: ../openapi.yaml#/components/schemas/Email
+VerifyRegistrationCodeRequest:
+  type: object
+  additionalProperties: false
+  required:
+    - challengeId
+    - code
+  properties:
+    challengeId: &a1
+      $ref: ../openapi.yaml#/components/schemas/Uuid
+    code:
+      $ref: ../openapi.yaml#/components/schemas/VerificationCode
+CompletePublicRegistrationRequest:
+  type: object
+  additionalProperties: false
+  required:
+    - registrationToken
+    - nickname
+    - password
+  properties:
+    registrationToken: &a3
+      $ref: ../openapi.yaml#/components/schemas/OpaqueIdentifier
+    nickname:
+      $ref: ../openapi.yaml#/components/schemas/Nickname
+    password:
+      $ref: ../openapi.yaml#/components/schemas/Password
+RegistrationCodeRequested:
+  type: object
+  additionalProperties: false
+  required:
+    - status
+    - challengeId
+    - serverTime
+    - resendAvailableAt
+  properties:
+    status:
+      type: string
+      const: accepted
+    challengeId: *a1
+    serverTime: &a2
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
+    resendAvailableAt: *a2
+RegistrationGrant:
+  type: object
+  additionalProperties: false
+  required:
+    - registrationToken
+    - email
+    - expiresAt
+  properties:
+    registrationToken: *a3
+    email: *a4
+    expiresAt: *a2
+RegistrationResult:
+  type: object
+  additionalProperties: false
+  required:
+    - status
+    - userId
+    - email
+  properties:
+    status:
+      type: string
+      const: registered
+    userId: *a1
+    email: *a4
+CfxSignInRequest:
+  type: object
+  additionalProperties: false
+  required:
+    - identityTicket
+  properties:
+    identityTicket: *a3
+CfxSignInResult:
+  oneOf:
+    - type: object
+      additionalProperties: false
+      required:
+        - kind
+        - token
+        - expiresAt
+      properties:
+        kind:
+          type: string
+          const: signed-in
+        token: *a3
+        expiresAt: *a2
+    - type: object
+      additionalProperties: false
+      required:
+        - kind
+        - registrationToken
+        - email
+        - suggestedNickname
+        - expiresAt
+      properties:
+        kind:
+          type: string
+          const: registration-required
+        registrationToken: *a3
+        email: *a4
+        suggestedNickname:
+          anyOf:
+            - $ref: ../openapi.yaml#/components/schemas/Nickname
+            - type: "null"
+        expiresAt: *a2
+    - type: object
+      additionalProperties: false
+      required:
+        - kind
+        - email
+        - nextAction
+      properties:
+        kind:
+          type: string
+          const: account-exists
+        email: *a4
+        nextAction:
+          type: string
+          const: login_then_link

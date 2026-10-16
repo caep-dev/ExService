@@ -1,5 +1,5 @@
 import { createServer } from 'node:http'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createExAxios, ExAxiosError } from '@sdk/src/http/node'
 import { createHttpCore } from '@sdk/src/http/core'
 import { createApiClient } from '@api-client/src/client'
@@ -17,6 +17,24 @@ async function fixture(handler: Parameters<typeof createServer>[0]): Promise<str
 }
 
 describe('ExAxios Node HTTP boundary', () => {
+  it('uses same-origin browser cookies only when explicitly enabled and keeps redirects blocked for protected requests', async () => {
+    const origin='http://127.0.0.1:18080',requests:Request[]=[]
+    const intercept=vi.spyOn(globalThis,'fetch').mockImplementation(async request=>{
+      requests.push(request as Request)
+      return new Response('{}',{headers:{'content-type':'application/json'}})
+    })
+    try {
+      const http=createHttpCore({environment:'browser',origin},{baseUrl:`${origin}/api`,websiteBaseUrl:`${origin}/api`,sameOriginCookies:true,alert:false})
+      http.setToken('token')
+      await http({url:'/auth/registration/code',method:'POST',data:{email:'member@example.com'}})
+      await http({url:'http://127.0.0.1:18081/api/public'})
+      const isolated=createHttpCore({environment:'browser',origin},{alert:false})
+      await isolated({url:'/public'})
+      expect(requests.map(request=>request.credentials)).toEqual(['same-origin','same-origin','omit'])
+      expect(requests[0]!.redirect).toBe('error')
+      expect(requests[1]!.headers.has('Authorization')).toBe(false)
+    } finally {intercept.mockRestore()}
+  })
   it('returns JSON body and attaches a scoped token', async () => {
     const received: string[] = []
     const origin = await fixture((request, response) => {

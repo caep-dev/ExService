@@ -7,6 +7,7 @@ import { readRuntimeConfiguration } from './settings.mjs'
 
 export function serverSpecification(action, args = [], { workspace = root, inherited = process.env } = {}) {
   const entries = { dev: 'src/server.ts', start: 'dist/server.js', 'db:migrate': 'src/db/migrate.ts', 'db:reset': 'src/db/reset.ts',
+    'db:registration-inventory': 'src/db/public-registration-inventory-cli.ts',
     'sso:create': 'src/cli/sso-create.ts', 'sso:inspect': 'src/cli/sso-inspect.ts', 'auth:disable': 'src/cli/auth-disable.ts',
     'auth:enable': 'src/cli/auth-enable.ts', 'integration:check': 'src/cli/integration-check.ts', 'support-feedback': 'src/cli/support-feedback.ts' }
   if (!Object.hasOwn(entries, action)) throw new LocalError('RUNTIME_SERVER_ACTION_INVALID')

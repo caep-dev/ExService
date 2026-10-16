@@ -15,7 +15,7 @@ const Fastify = require('fastify'), fp = require('fastify-plugin')
 const fpUrl = JSON.stringify(pathToFileURL(require.resolve('fastify-plugin')).href)
 const apps: FastifyInstance[] = [], directories: string[] = []
 // Generated probes only use object identity; they never call a service method.
-const services = () => Object.freeze({ authServices: {}, profileServices: {}, joinServices: {}, invitationServices: {}, storageServices: {}, notifications: {} }) as BusinessServices
+const services = () => Object.freeze({ authServices: {}, profileServices: {}, joinServices: {}, identityLinkServices:{},registrationServices:{},communityServices:{},storageServices: {}, notifications: {} }) as BusinessServices
 
 function fixture(extension: 'js' | 'ts' = 'js') {
   mkdirSync(owned, { recursive: true })

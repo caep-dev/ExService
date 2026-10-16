@@ -19,6 +19,8 @@ export interface SessionExpiredContext {
 export interface ExAxiosOptions {
   baseUrl?: string;
   websiteBaseUrl?: string;
+  /** Browser binding cookies use Fetch's same-origin policy; cross-origin cookies stay omitted. */
+  sameOriginCookies?: boolean;
   alert?: boolean;
   loginUrl?: string;
   onSessionExpired?: (context: SessionExpiredContext) => void | Promise<void>;
@@ -264,6 +266,7 @@ export function createHttpCore(
         ![
           "baseUrl",
           "websiteBaseUrl",
+          "sameOriginCookies",
           "alert",
           "loginUrl",
           "onSessionExpired",
@@ -272,6 +275,8 @@ export function createHttpCore(
   )
     throw configError();
   if (options.alert !== undefined && typeof options.alert !== "boolean")
+    throw configError();
+  if (options.sameOriginCookies !== undefined && typeof options.sameOriginCookies !== "boolean")
     throw configError();
   if (
     options.onSessionExpired !== undefined &&
@@ -414,10 +419,11 @@ export function createHttpCore(
           : "arraybuffer",
       transformResponse: [(data: unknown) => data],
       validateStatus: () => true,
-      withCredentials: false,
+      // Axios fetch defaults to same-origin only when withCredentials is omitted.
+      ...(runtime.environment === "browser" && options.sameOriginCookies ? {} : { withCredentials: false }),
       adapter: runtime.environment === "browser" ? "fetch" : "http",
       ...(runtime.environment === "browser" && protectedRequest
-        ? { fetchOptions: { redirect: "error", credentials: "omit" } }
+        ? { fetchOptions: { redirect: "error", credentials: options.sameOriginCookies ? "same-origin" : "omit" } }
         : {}),
       ...(runtime.environment === "node" && protectedRequest
         ? { maxRedirects: 0 }

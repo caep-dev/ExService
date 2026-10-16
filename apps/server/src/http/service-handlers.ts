@@ -6,6 +6,10 @@ import { operations as storage } from '../modules/storage/api/operations.js'
 import { operations as notifications } from '../modules/notifications/api/operations.js'
 import { operations as system } from './system/operations.js'
 import { operations as support } from '../domains/support/api/operations.js'
+import { operations as cfx } from '../modules/cfx/api/operations.js'
+import { operations as registration } from '../modules/registration/api/operations.js'
+import { operations as identityLinks } from '../modules/identity-links/api/operations.js'
+import { operations as communities } from '../modules/communities/api/operations.js'
 
 type MergedOperations<Maps extends readonly object[]> =
   Maps extends readonly [infer First extends object, ...infer Rest extends readonly object[]]
@@ -21,4 +25,4 @@ export function mergeOperations<const Maps extends readonly object[]>(...maps: M
   return merged as MergedOperations<Maps>
 }
 
-export const serviceHandlers = mergeOperations(system, auth, profile, join, identity, storage, notifications, support)
+export const serviceHandlers = mergeOperations(system, auth, profile, join, identity, storage, notifications, support, cfx, registration, identityLinks, communities)

@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "typeRoots": ["../../apps/server/node_modules/@types"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": [
+    "*.ts",
+    "../contract/join*.test.ts",
+    "../contract/upload-lifecycle*.test.ts",
+    "../auth/shared-password-budget.test.ts",
+    "../../apps/server/src/**/*.d.ts"
+  ]
+}

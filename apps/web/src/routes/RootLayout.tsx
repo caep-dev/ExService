@@ -8,7 +8,7 @@ import {
   NotificationBellSlot, NotificationHistoryModalSlot, NotificationsProvider,
 } from '@web/src/notifications/NotificationsExperience'
 import { SettingsModal } from '@web/src/settings/SettingsExperience'
-import { InvitationRegistrationFlow } from '@web/src/invitations/InvitationRegistrationFlow'
+import { PublicRegistrationFlow } from '@web/src/registration/PublicRegistrationFlow'
 
 export interface SiteOutletContext { requestLogin(trigger: HTMLElement): void }
 
@@ -86,12 +86,12 @@ export function RootLayout({ glassAtTop = false }: { glassAtTop?: boolean }) {
             if (!open) auth.closeModal()
           }}
         >
-          {auth.modalMode === 'register' ? <InvitationRegistrationFlow presentation="modal"
+          {auth.modalMode === 'register' ? <PublicRegistrationFlow presentation="modal"
             onJoin={join} onLogin={email => { setLoginEmail(email); auth.openModal('login') }} /> : <AuthFlow
             initialMode="login"
             initialEmail={loginEmail}
             presentation="modal"
-            onJoin={join}
+            onJoin={() => auth.openModal('register')}
             onFinished={auth.closeModal}
           />}
         </AuthModal>

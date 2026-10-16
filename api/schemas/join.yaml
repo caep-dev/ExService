@@ -2,10 +2,12 @@ JoinReviewRequest:
   type: object
   additionalProperties: false
 JoinApplicationRequest:
-  description: "Only multipart: exactly one application/json part (application.json, at most 64 KiB), optional proofs. Unknown parts, duplicate application, truncation and forged markers are rejected; application and all bytes commit atomically."
+  description: "Only multipart: exactly one application/json part (application.json, at most 64 KiB), optional proofs.
+    Unknown parts, duplicate application, truncation and forged markers are rejected; application and all bytes commit
+    atomically."
   oneOf:
-    - $ref: "../openapi.yaml#/components/schemas/JoinNewApplicationRequest"
-    - $ref: "../openapi.yaml#/components/schemas/JoinExperiencedApplicationRequest"
+    - $ref: ../openapi.yaml#/components/schemas/JoinNewApplicationRequest
+    - $ref: ../openapi.yaml#/components/schemas/JoinExperiencedApplicationRequest
 JoinApplicationQq:
   type: string
   pattern: ^[0-9]{5,13}$
@@ -170,27 +172,22 @@ JoinNewForm:
           - friends
           - other
     answers:
-      $ref: "../openapi.yaml#/components/schemas/JoinNewAnswers"
+      $ref: ../openapi.yaml#/components/schemas/JoinNewAnswers
     commitments:
-      $ref: "../openapi.yaml#/components/schemas/JoinNewCommitments"
-  description: Answer and freeTime strings are trimmed then counted as Unicode code points. The server independently checks calendar and text semantics.
+      $ref: ../openapi.yaml#/components/schemas/JoinNewCommitments
+  description: Answer and freeTime strings are trimmed then counted as Unicode code points. The server independently
+    checks calendar and text semantics.
 JoinNewApplicationPayload:
   type: object
   additionalProperties: false
   required:
-    - email
-    - nickname
     - qq
     - form
   properties:
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-    nickname:
-      $ref: "../openapi.yaml#/components/schemas/Nickname"
     qq:
-      $ref: "../openapi.yaml#/components/schemas/JoinApplicationQq"
+      $ref: ../openapi.yaml#/components/schemas/JoinApplicationQq
     form:
-      $ref: "../openapi.yaml#/components/schemas/JoinNewForm"
+      $ref: ../openapi.yaml#/components/schemas/JoinNewForm
 JoinNewApplicationRequest:
   type: object
   additionalProperties: false
@@ -198,7 +195,7 @@ JoinNewApplicationRequest:
     - application
   properties:
     application:
-      $ref: "../openapi.yaml#/components/schemas/JoinNewApplicationPayload"
+      $ref: ../openapi.yaml#/components/schemas/JoinNewApplicationPayload
     proofs:
       type: array
       maxItems: 0
@@ -228,27 +225,22 @@ JoinExperiencedForm:
     freeTime: *a4
     discoveryChannels: *a5
     answers:
-      $ref: "../openapi.yaml#/components/schemas/JoinExperiencedAnswers"
+      $ref: ../openapi.yaml#/components/schemas/JoinExperiencedAnswers
     commitments:
-      $ref: "../openapi.yaml#/components/schemas/JoinExperiencedCommitments"
-  description: Answer and freeTime strings are trimmed then counted as Unicode code points. The server independently checks calendar and text semantics.
+      $ref: ../openapi.yaml#/components/schemas/JoinExperiencedCommitments
+  description: Answer and freeTime strings are trimmed then counted as Unicode code points. The server independently
+    checks calendar and text semantics.
 JoinExperiencedApplicationPayload:
   type: object
   additionalProperties: false
   required:
-    - email
-    - nickname
     - qq
     - form
   properties:
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-    nickname:
-      $ref: "../openapi.yaml#/components/schemas/Nickname"
     qq:
-      $ref: "../openapi.yaml#/components/schemas/JoinApplicationQq"
+      $ref: ../openapi.yaml#/components/schemas/JoinApplicationQq
     form:
-      $ref: "../openapi.yaml#/components/schemas/JoinExperiencedForm"
+      $ref: ../openapi.yaml#/components/schemas/JoinExperiencedForm
 JoinExperiencedApplicationRequest:
   type: object
   additionalProperties: false
@@ -256,7 +248,7 @@ JoinExperiencedApplicationRequest:
     - application
   properties:
     application:
-      $ref: "../openapi.yaml#/components/schemas/JoinExperiencedApplicationPayload"
+      $ref: ../openapi.yaml#/components/schemas/JoinExperiencedApplicationPayload
     proofs:
       type: array
       maxItems: 5
@@ -266,90 +258,8 @@ JoinExperiencedApplicationRequest:
       description: Repeated same-name parts; private raw files must pair one-to-one with validated body markers.
 JoinApplicationPayload:
   oneOf:
-    - $ref: "../openapi.yaml#/components/schemas/JoinNewApplicationPayload"
-    - $ref: "../openapi.yaml#/components/schemas/JoinExperiencedApplicationPayload"
-JoinApplicationQueryRequest:
-  type: object
-  additionalProperties: false
-  required:
-    - email
-  properties:
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-JoinApplicationResult:
-  oneOf:
-    - type: object
-      additionalProperties: false
-      required:
-        - status
-        - nextAction
-      properties:
-        status:
-          type: string
-          const: not_found
-        nextAction:
-          type: string
-          const: apply
-    - type: object
-      additionalProperties: false
-      required:
-        - status
-        - nextAction
-      properties:
-        status:
-          type: string
-          const: pending
-        nextAction:
-          type: string
-          const: wait
-    - type: object
-      additionalProperties: false
-      required:
-        - status
-        - nextAction
-      properties:
-        status:
-          type: string
-          const: approved
-        nextAction:
-          type: string
-          const: register
-    - type: object
-      additionalProperties: false
-      required:
-        - status
-        - nextAction
-      properties:
-        status:
-          type: string
-          const: rejected
-        nextAction:
-          type: string
-          const: contact_community
-    - type: object
-      additionalProperties: false
-      required:
-        - status
-        - nextAction
-      properties:
-        status:
-          type: string
-          const: invitation_expired
-        nextAction:
-          type: string
-          const: contact_community
-    - type: object
-      additionalProperties: false
-      required:
-        - status
-        - nextAction
-      properties:
-        status:
-          type: string
-          const: registered
-        nextAction:
-          type: string
-          const: login
+    - $ref: ../openapi.yaml#/components/schemas/JoinNewApplicationPayload
+    - $ref: ../openapi.yaml#/components/schemas/JoinExperiencedApplicationPayload
 JoinApplicationAttachment:
   type: object
   additionalProperties: false
@@ -362,7 +272,7 @@ JoinApplicationAttachment:
     - ordinal
   properties:
     id:
-      $ref: "../openapi.yaml#/components/schemas/Uuid"
+      $ref: ../openapi.yaml#/components/schemas/Uuid
     originalName:
       type: string
       minLength: 1
@@ -412,16 +322,19 @@ JoinNewApplicationSummary:
     - createdAt
     - reviewedAt
     - reviewedByUserId
-    - invitationStatus
-    - deliveryStatus
     - applicationType
+    - communityId
+    - applicantUserId
+    - legacyReadOnly
+    - identitySnapshot
+    - missingProviders
   properties:
     id:
-      $ref: "../openapi.yaml#/components/schemas/Uuid"
+      $ref: ../openapi.yaml#/components/schemas/Uuid
     email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
+      $ref: ../openapi.yaml#/components/schemas/Email
     nickname:
-      $ref: "../openapi.yaml#/components/schemas/Nickname"
+      $ref: ../openapi.yaml#/components/schemas/Nickname
     qq:
       type: string
       pattern: ^[0-9]{1,20}$
@@ -432,7 +345,7 @@ JoinNewApplicationSummary:
         - approved
         - rejected
     createdAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     reviewedAt:
       type:
         - integer
@@ -440,57 +353,52 @@ JoinNewApplicationSummary:
       minimum: 0
       maximum: 9007199254740991
     reviewedByUserId:
-      $ref: "../openapi.yaml#/components/schemas/NullableUuid"
-    invitationStatus:
-      type:
-        - string
-        - "null"
-      enum:
-        - active
-        - expired
-        - completed
-        - null
-    deliveryStatus:
-      type:
-        - string
-        - "null"
-      enum:
-        - pending
-        - sent
-        - failed
-        - null
+      $ref: ../openapi.yaml#/components/schemas/NullableUuid
     applicationType:
       type: string
       const: new
+    communityId: &a6
+      $ref: ../openapi.yaml#/components/schemas/CommunityId
+    applicantUserId: &a7
+      $ref: ../openapi.yaml#/components/schemas/Uuid
+    legacyReadOnly:
+      type: boolean
+      const: false
+    identitySnapshot: &a8
+      anyOf:
+        - $ref: ../openapi.yaml#/components/schemas/JoinIdentitySnapshot
+        - type: "null"
+    missingProviders: &a9
+      type: array
+      uniqueItems: true
+      maxItems: 1
+      items:
+        type: string
+        const: cfx
 JoinNewApplicationDetail:
   type: object
   additionalProperties: false
   required:
     - application
-    - invitation
     - serverTime
     - formVersion
     - form
     - attachments
   properties:
     application:
-      $ref: "../openapi.yaml#/components/schemas/JoinNewApplicationSummary"
-    invitation:
-      anyOf:
-        - $ref: "../openapi.yaml#/components/schemas/InvitationSummary"
-        - type: "null"
+      $ref: ../openapi.yaml#/components/schemas/JoinNewApplicationSummary
     serverTime:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     formVersion:
       type: integer
       const: 1
     form:
-      $ref: "../openapi.yaml#/components/schemas/JoinNewForm"
+      $ref: ../openapi.yaml#/components/schemas/JoinNewForm
     attachments:
       type: array
       maxItems: 0
       items:
-        $ref: "../openapi.yaml#/components/schemas/JoinApplicationAttachment"
+        $ref: ../openapi.yaml#/components/schemas/JoinApplicationAttachment
 JoinExperiencedApplicationSummary:
   type: object
   additionalProperties: false
@@ -503,16 +411,19 @@ JoinExperiencedApplicationSummary:
     - createdAt
     - reviewedAt
     - reviewedByUserId
-    - invitationStatus
-    - deliveryStatus
     - applicationType
+    - communityId
+    - applicantUserId
+    - legacyReadOnly
+    - identitySnapshot
+    - missingProviders
   properties:
     id:
-      $ref: "../openapi.yaml#/components/schemas/Uuid"
+      $ref: ../openapi.yaml#/components/schemas/Uuid
     email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
+      $ref: ../openapi.yaml#/components/schemas/Email
     nickname:
-      $ref: "../openapi.yaml#/components/schemas/Nickname"
+      $ref: ../openapi.yaml#/components/schemas/Nickname
     qq:
       type: string
       pattern: ^[0-9]{1,20}$
@@ -523,7 +434,7 @@ JoinExperiencedApplicationSummary:
         - approved
         - rejected
     createdAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     reviewedAt:
       type:
         - integer
@@ -531,57 +442,41 @@ JoinExperiencedApplicationSummary:
       minimum: 0
       maximum: 9007199254740991
     reviewedByUserId:
-      $ref: "../openapi.yaml#/components/schemas/NullableUuid"
-    invitationStatus:
-      type:
-        - string
-        - "null"
-      enum:
-        - active
-        - expired
-        - completed
-        - null
-    deliveryStatus:
-      type:
-        - string
-        - "null"
-      enum:
-        - pending
-        - sent
-        - failed
-        - null
+      $ref: ../openapi.yaml#/components/schemas/NullableUuid
     applicationType:
       type: string
       const: experienced
+    communityId: *a6
+    applicantUserId: *a7
+    legacyReadOnly:
+      type: boolean
+      const: false
+    identitySnapshot: *a8
+    missingProviders: *a9
 JoinExperiencedApplicationDetail:
   type: object
   additionalProperties: false
   required:
     - application
-    - invitation
     - serverTime
     - formVersion
     - form
     - attachments
   properties:
     application:
-      $ref: "../openapi.yaml#/components/schemas/JoinExperiencedApplicationSummary"
-    invitation:
-      anyOf:
-        - $ref: "../openapi.yaml#/components/schemas/InvitationSummary"
-        - type: "null"
+      $ref: ../openapi.yaml#/components/schemas/JoinExperiencedApplicationSummary
     serverTime:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     formVersion:
       type: integer
       const: 1
     form:
-      $ref: "../openapi.yaml#/components/schemas/JoinExperiencedForm"
+      $ref: ../openapi.yaml#/components/schemas/JoinExperiencedForm
     attachments:
       type: array
       maxItems: 5
       items:
-        $ref: "../openapi.yaml#/components/schemas/JoinApplicationAttachment"
+        $ref: ../openapi.yaml#/components/schemas/JoinApplicationAttachment
 JoinLegacyApplicationSummary:
   type: object
   additionalProperties: false
@@ -597,13 +492,18 @@ JoinLegacyApplicationSummary:
     - invitationStatus
     - deliveryStatus
     - applicationType
+    - communityId
+    - applicantUserId
+    - legacyReadOnly
+    - identitySnapshot
+    - missingProviders
   properties:
     id:
-      $ref: "../openapi.yaml#/components/schemas/Uuid"
+      $ref: ../openapi.yaml#/components/schemas/Uuid
     email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
+      $ref: ../openapi.yaml#/components/schemas/Email
     nickname:
-      $ref: "../openapi.yaml#/components/schemas/Nickname"
+      $ref: ../openapi.yaml#/components/schemas/Nickname
     qq:
       type: string
       pattern: ^[0-9]{1,20}$
@@ -614,7 +514,7 @@ JoinLegacyApplicationSummary:
         - approved
         - rejected
     createdAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     reviewedAt:
       type:
         - integer
@@ -622,7 +522,7 @@ JoinLegacyApplicationSummary:
       minimum: 0
       maximum: 9007199254740991
     reviewedByUserId:
-      $ref: "../openapi.yaml#/components/schemas/NullableUuid"
+      $ref: ../openapi.yaml#/components/schemas/NullableUuid
     invitationStatus:
       type:
         - string
@@ -644,6 +544,16 @@ JoinLegacyApplicationSummary:
     applicationType:
       type: string
       const: legacy
+    communityId: *a6
+    applicantUserId: &a10
+      anyOf:
+        - *a7
+        - type: "null"
+    legacyReadOnly:
+      type: boolean
+      const: true
+    identitySnapshot: *a8
+    missingProviders: *a9
 JoinLegacyApplicationDetail:
   type: object
   additionalProperties: false
@@ -656,13 +566,13 @@ JoinLegacyApplicationDetail:
     - attachments
   properties:
     application:
-      $ref: "../openapi.yaml#/components/schemas/JoinLegacyApplicationSummary"
+      $ref: ../openapi.yaml#/components/schemas/JoinLegacyApplicationSummary
     invitation:
       anyOf:
-        - $ref: "../openapi.yaml#/components/schemas/InvitationSummary"
+        - $ref: ../openapi.yaml#/components/schemas/InvitationSummary
         - type: "null"
     serverTime:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     formVersion:
       type: integer
       const: 0
@@ -672,7 +582,7 @@ JoinLegacyApplicationDetail:
       type: array
       maxItems: 0
       items:
-        $ref: "../openapi.yaml#/components/schemas/JoinApplicationAttachment"
+        $ref: ../openapi.yaml#/components/schemas/JoinApplicationAttachment
 JoinApplicationReceived:
   type: object
   additionalProperties: false
@@ -682,181 +592,13 @@ JoinApplicationReceived:
     status:
       type: string
       const: received
-InvitationEligibilityRequest:
-  type: object
-  additionalProperties: false
-  required:
-    - email
-  properties:
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-InvitationCodeRequest:
-  type: object
-  additionalProperties: false
-  required:
-    - email
-  properties:
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-InvitationEligibility:
-  type: object
-  additionalProperties: false
-  required:
-    - status
-    - email
-    - serverTime
-    - resendAvailableAt
-  properties:
-    status:
-      type: string
-      const: eligible
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-    serverTime:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
-    resendAvailableAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
-InvitationCodeAccepted:
-  type: object
-  additionalProperties: false
-  required:
-    - status
-    - serverTime
-    - resendAvailableAt
-  properties:
-    status:
-      type: string
-      const: accepted
-    serverTime:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
-    resendAvailableAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
-InvitationVerifyRequest:
-  type: object
-  additionalProperties: false
-  required:
-    - email
-    - code
-  properties:
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-    code:
-      $ref: "../openapi.yaml#/components/schemas/VerificationCode"
-InvitationVerified:
-  type: object
-  additionalProperties: false
-  required:
-    - status
-    - completionToken
-    - email
-    - nickname
-    - serverTime
-    - completionExpiresAt
-  properties:
-    status:
-      type: string
-      const: verified
-    completionToken:
-      $ref: "../openapi.yaml#/components/schemas/OpaqueIdentifier"
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-    nickname:
-      $ref: "../openapi.yaml#/components/schemas/Nickname"
-    serverTime:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
-    completionExpiresAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
-InvitationCompleteRequest:
-  type: object
-  additionalProperties: false
-  required:
-    - completionToken
-    - nickname
-    - password
-  properties:
-    completionToken:
-      $ref: "../openapi.yaml#/components/schemas/OpaqueIdentifier"
-    nickname:
-      $ref: "../openapi.yaml#/components/schemas/Nickname"
-    password:
-      $ref: "../openapi.yaml#/components/schemas/Password"
-InvitationRegistrationCompleted:
-  type: object
-  additionalProperties: false
-  required:
-    - status
-    - email
-  properties:
-    status:
-      type: string
-      const: registered
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
 JoinApplicationSummary:
-  type: object
-  additionalProperties: false
-  required:
-    - id
-    - email
-    - nickname
-    - qq
-    - status
-    - createdAt
-    - reviewedAt
-    - reviewedByUserId
-    - invitationStatus
-    - deliveryStatus
-    - applicationType
-  properties:
-    id:
-      $ref: "../openapi.yaml#/components/schemas/Uuid"
-    email:
-      $ref: "../openapi.yaml#/components/schemas/Email"
-    nickname:
-      $ref: "../openapi.yaml#/components/schemas/Nickname"
-    qq:
-      type: string
-      pattern: ^[0-9]{1,20}$
-    status:
-      type: string
-      enum:
-        - pending
-        - approved
-        - rejected
-    createdAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
-    reviewedAt:
-      type:
-        - integer
-        - "null"
-      minimum: 0
-      maximum: 9007199254740991
-    reviewedByUserId:
-      $ref: "../openapi.yaml#/components/schemas/NullableUuid"
-    invitationStatus:
-      type:
-        - string
-        - "null"
-      enum:
-        - active
-        - expired
-        - completed
-        - null
-    deliveryStatus:
-      type:
-        - string
-        - "null"
-      enum:
-        - pending
-        - sent
-        - failed
-        - null
-    applicationType:
-      type: string
-      enum:
-        - new
-        - experienced
-        - legacy
+  oneOf:
+    - $ref: ../openapi.yaml#/components/schemas/JoinNewApplicationSummary
+    - $ref: ../openapi.yaml#/components/schemas/JoinHistoricalNewApplicationSummary
+    - $ref: ../openapi.yaml#/components/schemas/JoinExperiencedApplicationSummary
+    - $ref: ../openapi.yaml#/components/schemas/JoinHistoricalExperiencedApplicationSummary
+    - $ref: ../openapi.yaml#/components/schemas/JoinLegacyApplicationSummary
 InvitationDeliverySummary:
   type: object
   additionalProperties: false
@@ -867,7 +609,7 @@ InvitationDeliverySummary:
     - finishedAt
   properties:
     id:
-      $ref: "../openapi.yaml#/components/schemas/Uuid"
+      $ref: ../openapi.yaml#/components/schemas/Uuid
     status:
       type: string
       enum:
@@ -875,7 +617,7 @@ InvitationDeliverySummary:
         - sent
         - failed
     startedAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     finishedAt:
       type:
         - integer
@@ -897,7 +639,7 @@ InvitationSummary:
     - latestDelivery
   properties:
     id:
-      $ref: "../openapi.yaml#/components/schemas/Uuid"
+      $ref: ../openapi.yaml#/components/schemas/Uuid
     status:
       type: string
       enum:
@@ -905,9 +647,9 @@ InvitationSummary:
         - expired
         - completed
     issuedAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     expiresAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     codeExpiresAt:
       type:
         - integer
@@ -921,19 +663,22 @@ InvitationSummary:
       minimum: 0
       maximum: 9007199254740991
     completedUserId:
-      $ref: "../openapi.yaml#/components/schemas/NullableUuid"
+      $ref: ../openapi.yaml#/components/schemas/NullableUuid
     resendAvailableAt:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     latestDelivery:
       anyOf:
-        - $ref: "../openapi.yaml#/components/schemas/InvitationDeliverySummary"
+        - $ref: ../openapi.yaml#/components/schemas/InvitationDeliverySummary
         - type: "null"
 JoinApplicationDetail:
-  description: Strict type/version/form/attachment pairing. Legacy is version 0, null form, no attachments. Corrupted version 1 records are never downgraded.
   oneOf:
-    - $ref: "../openapi.yaml#/components/schemas/JoinNewApplicationDetail"
-    - $ref: "../openapi.yaml#/components/schemas/JoinExperiencedApplicationDetail"
-    - $ref: "../openapi.yaml#/components/schemas/JoinLegacyApplicationDetail"
+    - $ref: ../openapi.yaml#/components/schemas/JoinNewApplicationDetail
+    - $ref: ../openapi.yaml#/components/schemas/JoinHistoricalNewApplicationDetail
+    - $ref: ../openapi.yaml#/components/schemas/JoinExperiencedApplicationDetail
+    - $ref: ../openapi.yaml#/components/schemas/JoinHistoricalExperiencedApplicationDetail
+    - $ref: ../openapi.yaml#/components/schemas/JoinLegacyApplicationDetail
+  description: Strict live/historical type and form version pairing. Historical records are read-only even when their
+    formVersion is 1.
 JoinApplicationList:
   type: object
   additionalProperties: false
@@ -947,14 +692,220 @@ JoinApplicationList:
     items:
       type: array
       items:
-        $ref: "../openapi.yaml#/components/schemas/JoinApplicationSummary"
+        $ref: ../openapi.yaml#/components/schemas/JoinApplicationSummary
     total:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     offset:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
     limit:
       type: integer
       minimum: 1
       maximum: 50
     serverTime:
-      $ref: "../openapi.yaml#/components/schemas/SafeTimestamp"
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
+JoinHistoricalNewApplicationSummary:
+  type: object
+  additionalProperties: false
+  required:
+    - id
+    - email
+    - nickname
+    - qq
+    - status
+    - createdAt
+    - reviewedAt
+    - reviewedByUserId
+    - invitationStatus
+    - deliveryStatus
+    - applicationType
+    - communityId
+    - applicantUserId
+    - legacyReadOnly
+    - identitySnapshot
+    - missingProviders
+  properties:
+    id:
+      $ref: ../openapi.yaml#/components/schemas/Uuid
+    email:
+      $ref: ../openapi.yaml#/components/schemas/Email
+    nickname:
+      $ref: ../openapi.yaml#/components/schemas/Nickname
+    qq:
+      type: string
+      pattern: ^[0-9]{1,20}$
+    status:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+    createdAt:
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
+    reviewedAt:
+      type:
+        - integer
+        - "null"
+      minimum: 0
+      maximum: 9007199254740991
+    reviewedByUserId:
+      $ref: ../openapi.yaml#/components/schemas/NullableUuid
+    invitationStatus:
+      type:
+        - string
+        - "null"
+      enum:
+        - active
+        - expired
+        - completed
+        - null
+    deliveryStatus:
+      type:
+        - string
+        - "null"
+      enum:
+        - pending
+        - sent
+        - failed
+        - null
+    applicationType:
+      type: string
+      const: new
+    communityId: *a6
+    applicantUserId: *a10
+    legacyReadOnly:
+      type: boolean
+      const: true
+    identitySnapshot: *a8
+    missingProviders: *a9
+JoinHistoricalNewApplicationDetail:
+  type: object
+  additionalProperties: false
+  required:
+    - application
+    - invitation
+    - serverTime
+    - formVersion
+    - form
+    - attachments
+  properties:
+    application:
+      $ref: ../openapi.yaml#/components/schemas/JoinHistoricalNewApplicationSummary
+    invitation:
+      anyOf:
+        - $ref: ../openapi.yaml#/components/schemas/InvitationSummary
+        - type: "null"
+    serverTime:
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
+    formVersion:
+      type: integer
+      const: 1
+    form:
+      $ref: ../openapi.yaml#/components/schemas/JoinNewForm
+    attachments:
+      type: array
+      maxItems: 0
+      items:
+        $ref: ../openapi.yaml#/components/schemas/JoinApplicationAttachment
+JoinHistoricalExperiencedApplicationSummary:
+  type: object
+  additionalProperties: false
+  required:
+    - id
+    - email
+    - nickname
+    - qq
+    - status
+    - createdAt
+    - reviewedAt
+    - reviewedByUserId
+    - invitationStatus
+    - deliveryStatus
+    - applicationType
+    - communityId
+    - applicantUserId
+    - legacyReadOnly
+    - identitySnapshot
+    - missingProviders
+  properties:
+    id:
+      $ref: ../openapi.yaml#/components/schemas/Uuid
+    email:
+      $ref: ../openapi.yaml#/components/schemas/Email
+    nickname:
+      $ref: ../openapi.yaml#/components/schemas/Nickname
+    qq:
+      type: string
+      pattern: ^[0-9]{1,20}$
+    status:
+      type: string
+      enum:
+        - pending
+        - approved
+        - rejected
+    createdAt:
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
+    reviewedAt:
+      type:
+        - integer
+        - "null"
+      minimum: 0
+      maximum: 9007199254740991
+    reviewedByUserId:
+      $ref: ../openapi.yaml#/components/schemas/NullableUuid
+    invitationStatus:
+      type:
+        - string
+        - "null"
+      enum:
+        - active
+        - expired
+        - completed
+        - null
+    deliveryStatus:
+      type:
+        - string
+        - "null"
+      enum:
+        - pending
+        - sent
+        - failed
+        - null
+    applicationType:
+      type: string
+      const: experienced
+    communityId: *a6
+    applicantUserId: *a10
+    legacyReadOnly:
+      type: boolean
+      const: true
+    identitySnapshot: *a8
+    missingProviders: *a9
+JoinHistoricalExperiencedApplicationDetail:
+  type: object
+  additionalProperties: false
+  required:
+    - application
+    - invitation
+    - serverTime
+    - formVersion
+    - form
+    - attachments
+  properties:
+    application:
+      $ref: ../openapi.yaml#/components/schemas/JoinHistoricalExperiencedApplicationSummary
+    invitation:
+      anyOf:
+        - $ref: ../openapi.yaml#/components/schemas/InvitationSummary
+        - type: "null"
+    serverTime:
+      $ref: ../openapi.yaml#/components/schemas/SafeTimestamp
+    formVersion:
+      type: integer
+      const: 1
+    form:
+      $ref: ../openapi.yaml#/components/schemas/JoinExperiencedForm
+    attachments:
+      type: array
+      maxItems: 5
+      items:
+        $ref: ../openapi.yaml#/components/schemas/JoinApplicationAttachment

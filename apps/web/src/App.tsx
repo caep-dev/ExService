@@ -14,6 +14,7 @@ import { CAEPJoinPage } from '@web/src/pages/JoinPage/CAEP'
 import { JoinResultPage } from '@web/src/pages/JoinResultPage'
 import { JoinReviewPage } from '@web/src/pages/JoinReviewPage'
 import { DocsPage } from '@web/src/pages/DocsPage'
+import { CommunityAdminPage } from '@web/src/pages/CommunityAdminPage'
 import { SignedOutPage } from '@web/src/pages/IdentityPage/SignedOutPage'
 import { OidcPage } from '@web/src/pages/IdentityPage/OidcPage'
 import { SupportAccess } from './routes/SupportAccess'
@@ -49,6 +50,7 @@ export function App() {
           <Route path="/join/rifling-911" element={<JoinPage />} />
           <Route path="/join/result" element={<JoinResultPage />} />
           <Route path="/admin/join-applications" element={<JoinReviewPage />} />
+          <Route path="/admin/communities" element={<CommunityAdminPage />} />
           <Route path="/account/profile" element={<ProfilePage />} />
         </Route>
         <Route element={<RootLayout glassAtTop />}>

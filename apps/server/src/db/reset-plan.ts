@@ -10,6 +10,8 @@ import * as schemaTables from '@server/src/db/schema.js'
 const SAFE_IDENTIFIER = /^[a-z_][a-z0-9_]*$/
 const DROP_ORDER = [
   'support_feedback_attachments', 'support_feedback_submissions',
+  'community_memberships', 'community_reviewers', 'auth_registration_deliveries',
+  'auth_registration_grants', 'auth_registration_emails', 'auth_identity_links',
   'notification_clear_batch_items', 'notification_clear_batches', 'notification_mutations',
   'notification_preferences', 'notification_receipts', 'notification_user_streams',
   'notification_event_recipients', 'notification_events', 'notification_contents',
@@ -17,10 +19,12 @@ const DROP_ORDER = [
   'join_delivery_attempts', 'join_email_controls', 'join_invitations',
   'join_application_attachments', 'join_application_forms', 'join_application_email_registry',
   'join_applications', 'community_group_memberships', 'auth_sso_requests',
-  'auth_sessions', 'community_groups', 'auth_users',
+  'auth_sessions', 'community_groups', 'communities', 'auth_users',
 ] as const
 const APPLICATION_INDEXES = new Set([...APPLICATION_INDEX_SIGNATURES.keys()].map(name => name.split('.')[1]))
 const BASELINE_NOT_NULL_COLUMNS = new Set([
+  schemaTables.authIdentityLinks, schemaTables.authRegistrationEmails, schemaTables.authRegistrationDeliveries,
+  schemaTables.authRegistrationGrants, schemaTables.communities, schemaTables.communityReviewers, schemaTables.communityMemberships,
   schemaTables.authUsers, schemaTables.authSessions, schemaTables.authSsoRequests,
   schemaTables.authOidcFlows, schemaTables.authOidcBindings, schemaTables.authIdentityOutbox,
   schemaTables.communityGroups, schemaTables.communityGroupMemberships,
@@ -204,8 +208,10 @@ export async function resetDatabase(options: DatabaseOptions, confirmation: stri
       if (row.table_name === 'auth_sessions' && row.column_name === 'id') {
         return !['gen_random_uuid()::text', '(gen_random_uuid())::text'].includes(row.expression)
       }
+      if (row.table_name === 'join_applications' && row.column_name === 'legacy_read_only') return row.expression !== 'false'
       if (row.expression !== '0') return true
       const zeroDefaultColumns = new Set([
+        'auth_registration_emails.code_version', 'auth_registration_emails.failed_attempts', 'communities.config_revision',
         'auth_users.profile_version', 'auth_identity_outbox.attempts',
         'join_applications.form_version', 'join_email_controls.failed_attempts',
         'notification_events.projection_attempts', 'notification_preferences.revision',

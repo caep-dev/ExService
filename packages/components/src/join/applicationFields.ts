@@ -39,21 +39,6 @@ export function joinApplicationFields(
 ): readonly FieldDefinition[] {
   const common: FieldDefinition[] = [
     {
-      name: "email",
-      label: "邮箱",
-      kind: "email",
-      step: 0,
-      autoComplete: "email",
-      description: "用于联系、结果查询和注册邀请，请填写常用邮箱。",
-    },
-    {
-      name: "nickname",
-      label: type === "new" ? "你的名字" : "IC 名字",
-      step: 0,
-      autoComplete: "nickname",
-      maxLength: 32,
-    },
-    {
       name: "qq",
       label: "QQ 号码",
       step: 0,

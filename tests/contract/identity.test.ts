@@ -13,7 +13,7 @@ afterEach(async () => {
 it('requires mapped internal keys and returns the exact linked-session contract', async () => {
   const fixture = await createTestAuth()
   fixtures.push(fixture)
-  const app = createApp({ joinServices: fixture.joinServices, invitationServices: fixture.invitationServices,
+  const app = createApp({ ...fixture,
     authServices: fixture.authServices, profileServices: fixture.profileServices, storageServices: fixture.storageServices,
     notifications: fixture.notifications, clickupServices: fixture.clickupServices, supportServices: fixture.supportServices,
     identityKeys: { clients: { 'another-app': 'app-secret', other: 'other-secret' }, bootstrapKey: 'bootstrap-secret' } })
@@ -85,10 +85,7 @@ it('routes the OIDC browser operations through the generated contract shape', as
   const oidcServices = new OidcService({ db: fixture.db, authServices: fixture.authServices, admin,
     issuer: 'http://identity.exwebsite.test:8090/', flowKey: Buffer.alloc(32, 7), now: fixture.now,
     clients: { 'another-app': { name: 'Test App', redirectUri: client.redirect_uris[0]!, scopes: ['openid'] } } })
-  const app = createApp({ joinServices: fixture.joinServices, invitationServices: fixture.invitationServices,
-    authServices: fixture.authServices, profileServices: fixture.profileServices, storageServices: fixture.storageServices,
-    notifications: fixture.notifications, clickupServices: fixture.clickupServices, supportServices: fixture.supportServices,
-    oidcServices })
+  const app = createApp({ ...fixture, oidcServices })
   apps.push(app)
   const inspect = await app.inject({ method: 'POST', url: '/api/auth/oidc/inspect', payload: { phase: 'login', challenge: 'a' } })
   expect(inspect.statusCode, inspect.body).toBe(200)

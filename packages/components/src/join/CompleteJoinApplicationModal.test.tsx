@@ -58,8 +58,6 @@ async function contact(
   user: ReturnType<typeof userEvent.setup>,
   name = "你的名字",
 ) {
-  await user.type(screen.getByLabelText("邮箱"), "player@example.com");
-  await user.type(screen.getByLabelText(name), "玩家");
   await user.type(screen.getByLabelText("QQ 号码"), "0012345");
 }
 
@@ -165,9 +163,9 @@ describe("完整申请 Modal", () => {
       );
     }
     render(<ConflictHarness />);
-    act(() => ref.current?.setError("该邮箱已有申请", "email"));
+    act(() => ref.current?.setError("该邮箱已有申请", "qq"));
     await waitFor(() =>
-      expect(document.activeElement).toBe(screen.getByLabelText("邮箱")),
+      expect(document.activeElement).toBe(screen.getByLabelText("QQ 号码")),
     );
   });
   it("reveals custom availability only after choosing other and validates its empty answer", async () => {
@@ -272,7 +270,7 @@ describe("完整申请 Modal", () => {
     render(<FinalHarness />);
     await user.click(screen.getByRole("button", { name: "提交申请" }));
     await waitFor(() =>
-      expect(document.activeElement).toBe(screen.getByLabelText("邮箱")),
+      expect(document.activeElement).toBe(screen.getByLabelText("QQ 号码")),
     );
   });
   it("clears drafts on close and isolates types when switching", async () => {
@@ -290,12 +288,12 @@ describe("完整申请 Modal", () => {
     await contact(user);
     view.rerender(<CompleteJoinApplicationModal {...props} open={false} />);
     view.rerender(<CompleteJoinApplicationModal {...props} />);
-    expect((screen.getByLabelText("邮箱") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("QQ 号码") as HTMLInputElement).value).toBe("");
     await contact(user);
     view.rerender(
       <CompleteJoinApplicationModal {...props} applicationType="experienced" />,
     );
-    expect((screen.getByLabelText("IC 名字") as HTMLInputElement).value).toBe(
+    expect((screen.getByLabelText("QQ 号码") as HTMLInputElement).value).toBe(
       "",
     );
   });
@@ -343,8 +341,8 @@ describe("完整申请 Modal", () => {
     act(() => ref.current?.setError("该邮箱已有申请，不能重复提交"));
     expect(screen.getByRole("alert").textContent).toContain("该邮箱已有申请");
     expect(screen.getByRole("link", { name: "查询申请结果" })).toBeTruthy();
-    expect((screen.getByLabelText("邮箱") as HTMLInputElement).value).toBe(
-      "player@example.com",
+    expect((screen.getByLabelText("QQ 号码") as HTMLInputElement).value).toBe(
+      "0012345",
     );
   });
   it("accepts chooser/drop/paste, keeps files backwards, removes files and rejects a sixth file", async () => {
@@ -486,7 +484,7 @@ describe("完整申请 Modal", () => {
       throw new Error("private error");
     });
     render(<Harness type="experienced" onSubmit={onSubmit} />);
-    await contact(user, "IC 名字");
+    await contact(user, "QQ 号码");
     await user.click(screen.getByRole("button", { name: /继续|检查申请/ }));
     expect(screen.getByRole("button", { name: "出生日期" }).textContent).toContain("2000-01-01");
     await choose(user, "申请人类型", "曾任其他服务器技术");

@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance } from '../../apps/server/node_modules/fastify'
 import { createApp } from '@workspace/server'
 import { createStorageModule, type StorageServices } from '@server/src/modules/storage/factory'
 import { parseStorageConfig, type StorageConfig } from '@server/src/modules/storage/config'
@@ -125,10 +125,7 @@ export function cosStorageFixture(cos: FakeCos, env: NodeJS.ProcessEnv = {}): St
 /** 用指定存储服务组装真实 app，其余依赖沿用既有测试 fixture。 */
 export function createAppWithStorage(fixture: TestAuth, storage: StorageServices): FastifyInstance {
   return createApp({
-    authServices: fixture.authServices,
-    profileServices: fixture.profileServices,
-    joinServices: fixture.joinServices,
-    invitationServices: fixture.invitationServices,
+    ...fixture,
     storageServices: storage,
     notifications: fixture.notifications, clickupServices: fixture.clickupServices, supportServices: fixture.supportServices,
   })
@@ -138,6 +135,6 @@ export function createAppWithStorage(fixture: TestAuth, storage: StorageServices
 export function uploadForm(fields: Record<string, string>, file: { name: string; bytes: Uint8Array; type?: string }): FormData {
   const form = new FormData()
   for (const [name, value] of Object.entries(fields)) form.append(name, value)
-  form.append('data', new Blob([file.bytes], { type: file.type ?? 'application/octet-stream' }), file.name)
+  form.append('data', new Blob([Uint8Array.from(file.bytes)], { type: file.type ?? 'application/octet-stream' }), file.name)
   return form
 }

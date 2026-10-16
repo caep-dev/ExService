@@ -5,7 +5,8 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, serviceHandlers } from '@workspace/server'
 import type { AppDatabase } from '@server/src/db/client'
-import { createAuthServices } from '@server/src/create-services'
+import { createAuthServices, createRegistrationServices } from '@server/src/create-services'
+import {createCfxServices} from '@server/src/modules/cfx/service'
 import { ProfileService } from '@server/src/modules/profile/service'
 import { createStorageModule } from '@server/src/modules/storage/factory'
 import { parseStorageConfig } from '@server/src/modules/storage/config'
@@ -26,7 +27,7 @@ const fp = require('fastify-plugin')
 const apps: ReturnType<typeof createApp>[] = []
 const directories: string[] = []
 const database: AppDatabase = {
-  async query() { throw new Error('boot tests must not query a database') },
+  async query(sql) { if(sql.startsWith('UPDATE auth_registration_deliveries SET status='))return {rows:[],rowCount:0};throw new Error('boot tests must not query business data') },
   async transaction(run) { return run(database) },
   async close() { throw new Error('plugins must not close injected resources') },
 }
@@ -34,12 +35,15 @@ const database: AppDatabase = {
 function fixture() {
   const directory = mkdtempSync(join(tmpdir(), 'exwebsite-plugin-'))
   directories.push(directory)
+  const auth=createAuthServices({db:database,codeHmacKey:Buffer.alloc(32,7)}),cfxServices=createCfxServices({config:{enabled:false}});
+  const notifications=createNotificationModule({db:database,tokenKey:Buffer.alloc(32,3)});
+  const profileServices = new ProfileService(database, directory, 'http://localhost:8080/api/avatars')
   return {
-    ...createAuthServices({ db: database, codeHmacKey: Buffer.alloc(32, 7) }),
-    profileServices: new ProfileService(database, directory, 'http://localhost:8080/api/avatars'),
+    ...auth,cfxServices,...createRegistrationServices({db:database,...auth,codeHmacKey:Buffer.alloc(32,7),cfxServices,notifications}),
+    profileServices,
     storageServices: createStorageModule({ config: parseStorageConfig({}, { dataRoot: directory }) }),
-    notifications: createNotificationModule({ db: database, tokenKey: Buffer.alloc(32, 3) }),
-    ...unavailableSupport(database, new ProfileService(database, directory, 'http://localhost:8080/api/avatars')),
+    notifications,
+    ...unavailableSupport(database, profileServices),
   }
 }
 
@@ -56,9 +60,14 @@ describe('explicit plugin dependencies', () => {
     expect(app.authServices).toBe(services.authServices)
     expect(app.profileServices).toBe(services.profileServices)
     expect(app.joinServices).toBe(services.joinServices)
-    expect(app.invitationServices).toBe(services.invitationServices)
+    expect(app.hasDecorator('invitationServices')).toBe(false)
+    expect(app.identityLinkServices).toBe(services.identityLinkServices)
+    expect(app.registrationServices).toBe(services.registrationServices)
+    expect(app.communityServices).toBe(services.communityServices)
     expect(app.storageServices).toBe(services.storageServices)
     expect(app.notifications).toBe(services.notifications)
+    expect(app.clickupServices).toBe(services.clickupServices)
+    expect(app.supportServices).toBe(services.supportServices)
     expect(app.hasDecorator('oidcServices')).toBe(true)
     expect(app.oidcServices).toBeUndefined()
     expect((await app.inject('/api/health')).json()).toEqual({ status: 'ok' })
@@ -144,14 +153,40 @@ it('rejects duplicate, missing and surplus operation handlers before Glue boot',
   expect(() => assertOperationCoverage(contract, serviceHandlers)).not.toThrow()
 })
 
-it.each(['authServices', 'profileServices', 'storageServices', 'notifications', 'joinServices', 'invitationServices'] as const)(
+it.each(['authServices', 'profileServices', 'storageServices', 'notifications', 'joinServices', 'identityLinkServices', 'registrationServices', 'communityServices', 'clickupServices', 'supportServices'] as const)(
   'rejects absent required %s with its safe diagnostic', async field => {
     const services = fixture(), app = createApp({ ...services, [field]: undefined } as unknown as Parameters<typeof createApp>[0])
     apps.push(app)
     let error: unknown
     try { await app.ready() } catch (failure) { error = failure }
     expect(error).toBeInstanceOf(BusinessPluginLoadError)
-    expect(error).toMatchObject({ code: 'BUSINESS_PLUGIN_BOOT_FAILED', context: { missingServiceFields: [field] } })
-    expect(formatBusinessPluginError(error as BusinessPluginLoadError)).toContain(field)
+    const expectedContext = field === 'clickupServices'
+      ? { pluginName: 'business-clickup' }
+      : { missingServiceFields: [field] }
+    expect(error).toMatchObject({ code: 'BUSINESS_PLUGIN_BOOT_FAILED', context: expectedContext })
+    expect(formatBusinessPluginError(error as BusinessPluginLoadError)).toContain(
+      field === 'clickupServices' ? 'business-clickup' : field,
+    )
   },
 )
+
+it('reports a missing identity-link service before deriving its account-rule service', async () => {
+  const { externalAccountServices: _unused, ...services } = fixture()
+  const app = createApp({ ...services, identityLinkServices: undefined } as unknown as Parameters<typeof createApp>[0])
+  apps.push(app)
+  let error: unknown
+  try { await app.ready() } catch (failure) { error = failure }
+  expect(error).toBeInstanceOf(BusinessPluginLoadError)
+  expect(error).toMatchObject({ code: 'BUSINESS_PLUGIN_BOOT_FAILED', context: { missingServiceFields: ['identityLinkServices'] } })
+})
+
+it('reports a missing account-rule service through the business plugin diagnostic', async () => {
+  const { externalAccountServices: _unused, ...services } = fixture()
+  Object.defineProperty(services.identityLinkServices, 'externalAccounts', { value: undefined })
+  const app = createApp(services)
+  apps.push(app)
+  let error: unknown
+  try { await app.ready() } catch (failure) { error = failure }
+  expect(error).toBeInstanceOf(BusinessPluginLoadError)
+  expect(error).toMatchObject({ code: 'BUSINESS_PLUGIN_BOOT_FAILED', context: { missingServiceFields: ['externalAccountServices'] } })
+})

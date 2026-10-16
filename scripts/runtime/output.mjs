@@ -107,7 +107,14 @@ export function reporter({ environment = {}, verbose = false, stream = process.s
   const safe = value => redact(value, environment)
   const styles = { bold: 1, gray: 90, cyan: 36, success: 32, warning: 33, error: 31 }
   const paint = (value, style) => color ? `\x1b[${styles[style]}m${value}\x1b[0m` : value
-  const emit = (plain, displayed = plain, retained = plain) => { persist?.(safe(retained)); write(displayed) }
+  // Simulator payloads contain live codes: retain only the channel marker, even in stage failure output.
+  const hideDevelopmentMail = value => String(value).replace(/\[registration-mail:development\][^\r\n]*/g,
+    '[registration-mail:development] [测试邮件内容已隐藏]')
+  const showDevelopmentMail = Boolean(stream.isTTY) && environment.SERVER_REGISTRATION_MAIL_SIMULATOR === 'true'
+  const emit = (plain, displayed = plain, retained = plain) => {
+    persist?.(safe(hideDevelopmentMail(retained)))
+    write(showDevelopmentMail ? displayed : hideDevelopmentMail(displayed))
+  }
   const title = value => { const text = safe(value); emit(text, paint(text, 'bold')) }
   const log = (service, line, level = '信息') => {
     const now = new Date(), name = safe(service), text = safe(line)
